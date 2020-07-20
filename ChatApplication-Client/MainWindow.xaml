@@ -1,0 +1,58 @@
+﻿<Window x:Class="MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="131*" >
+
+            </ColumnDefinition>
+            <ColumnDefinition Width="265*">
+
+            </ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="154*">
+
+                </RowDefinition>
+                <RowDefinition Height="265*">
+
+                </RowDefinition>
+
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="1"></ScrollViewer>
+
+        </Grid>
+        <Grid Grid.Column="1" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="332*">
+
+                </RowDefinition>
+                <RowDefinition Height="87*">
+
+                </RowDefinition>
+
+            </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="0">Testing</ScrollViewer>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="381*">
+
+                    </ColumnDefinition>
+                    <ColumnDefinition Width="149*">
+
+                    </ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox"/>
+                <Button Grid.Column="1" Content="Send"/>
+            </Grid>
+        </Grid>
+
+
+    </Grid>
+</Window>

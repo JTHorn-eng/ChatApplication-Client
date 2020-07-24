@@ -1,26 +1,18 @@
-﻿using Chat.client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Windows;
 
 namespace ChatApplication_Client
 {
-    class  MainWindow 
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
     {
-
         private ClientApplication client;
 
         public MainWindow()
         {
+            InitializeComponent();
             client = new ClientApplication();
         }
-
-        public static void Main(String[] args)
-        {
-            MainWindow mw = new MainWindow();
-        }
-
     }
 }

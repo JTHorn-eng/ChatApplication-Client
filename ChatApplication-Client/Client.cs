@@ -15,8 +15,6 @@ namespace Chat.client {
      * INIT =================
      * create remote endpoint object
      * 
-     * 
-     * 
      */
 
     public class StateObject
@@ -166,13 +164,11 @@ namespace Chat.client {
             try
             {
                 Socket client = (Socket)ar.AsyncState;
-
-
                 int bytesSent = client.EndSend(ar);
                 Console.WriteLine("Send {0} bytes to server. ", bytesSent);
 
                 
-            
+
             } catch (Exception e)
             {
                 Console.WriteLine(e.ToString());

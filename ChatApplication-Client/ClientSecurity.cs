@@ -33,8 +33,7 @@ namespace ChatApplication_Client
          * methods for retrieving keys are similar: if a key container with
          * specified name doesn't exist, then one is created, else
          * key is automatically loaded into the current AA object
-         * 
-         * THEREFORE ALWAYS CREATE A KEY FIRST
+         *
          */
 
         //delete key if overwritting key first before generating new one
@@ -169,6 +168,12 @@ namespace ChatApplication_Client
             HashAlgorithm sha = new SHA1CryptoServiceProvider();
             return sha.ComputeHash(Encoding.UTF8.GetBytes(plainText));
         }
+
+        /*
+         * 1) REQUEST ENCRYPTED SYMMETRIC KEY 
+         * 2) REQUEST DOWNLOAD OF MESSAGES
+         * 3) REQUEST SEND TO RECIPIENT
+        */
 
 
 

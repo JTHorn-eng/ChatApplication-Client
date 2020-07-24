@@ -5,8 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Chat Application" Height="450" Width="800">
+    <Window.Resources>
+        <Style x:Key= "Background" TargetType="TextBox">
+
+            <Setter Property="TextElement.FontStyle" Value="Italic"></Setter>
+        </Style>
+    </Window.Resources>
+    <Grid >
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="131*" >
 
@@ -15,7 +21,7 @@
 
             </ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <Grid>
+        <Grid Background="#FF3163BB">
             <Grid.RowDefinitions>
                 <RowDefinition Height="154*">
 
@@ -25,7 +31,7 @@
                 </RowDefinition>
 
             </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="1"></ScrollViewer>
+            <ScrollViewer Grid.Row="1" Background="#FFE9F8FD"></ScrollViewer>
 
         </Grid>
         <Grid Grid.Column="1" >
@@ -38,8 +44,9 @@
                 </RowDefinition>
 
             </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0">Testing</ScrollViewer>
-            <Grid Grid.Row="1">
+            <ScrollViewer Grid.Row="0" Margin="0,0,0,65" Grid.RowSpan="2" Background="#FFEEF8FB">Testing
+            </ScrollViewer>
+            <Grid Grid.Row="1" Margin="0,10,0,0" Background="#FF438EDA">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="381*">
 
@@ -48,8 +55,8 @@
 
                     </ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox"/>
-                <Button Grid.Column="1" Content="Send"/>
+                <TextBox  Style= "{StaticResource Background}" Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox" Margin="10,22,111,10" Grid.ColumnSpan="2"/>
+                <Button Click="GetSendTextBoxString" Grid.Column="1" Content="Send" Margin="43,22,20,10" Background="Black" Cursor="ArrowCD"/>
             </Grid>
         </Grid>
 

@@ -66,6 +66,7 @@
     <Compile Include="ClientApplication.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClientSecurity.cs" />
     <Compile Include="MainWindow.xaml.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

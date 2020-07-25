@@ -3,60 +3,43 @@ using System.Data.SQLite;
 
 namespace Chat.client
 {
-    class Database
+    public static class Database
     {
 
-        private string databaseDirectory = "Chat/dbfiles/messages.db";
-        private SQLiteConnection connection;
-        private int localID = 0;
-        public Database()
-        {
-            try
-            {
-                //setup connection to database
-                connection = new SQLiteConnection(databaseDirectory);
-                connection.Open();
-            } catch (Exception e)
+        private static string message_objects_location = "Chat/dbfiles/messages.db";
+        private static long localID = 0;
 
-            {
-                Console.WriteLine("Error: " + e.Message);
-            }
+        private static void GetUpdatedID()
+        {
+            SQLiteConnection connection = new SQLiteConnection(message_objects_location);
+            connection.Open();
+            SQLiteTransaction transaction = null;
+            transaction = connection.BeginTransaction();
+            localID = connection.LastInsertRowId;
+            transaction.Commit();
+            connection.Close();
         }
-
-        public void createMessageTable()
+        public static String GetTimestamp(this DateTime value)
         {
-            //check if table exists
-
-
-            //create Message table
-            SQLiteCommand cmd = new SQLiteCommand(connection);
-            cmd.CommandText = "CREATE TABLE IF NOT EXISTS Messages(ID, Sender, Recipient, Content, Timestamp)";
-            cmd.ExecuteNonQuery();
-            Console.WriteLine(" \n Created new table \n ");
+            return value.ToString("yyyyMMddHHmmssfff");
         }
-
-        public void insertIntoMessageTable(string sender, string recipient, string content)
+        public static void UpdateMessageTable(string sender, string recipient, string content)
         {
+
+            SQLiteConnection connection = new SQLiteConnection(message_objects_location);
+            connection.Open();
             //retrieve timestamp
-            string timeStamp = DateTime.Now.ToString();
+            string currentTimestamp = GetTimestamp(new DateTime());
 
             //form insert SQL statement
             SQLiteCommand cmd = new SQLiteCommand(connection);
-            cmd = new SQLiteCommand(connection);
-            cmd.CommandText = "INSERT INTO Messages(ID, Sender, Recipient, Content, Timestamp) VALUES(@ID, @Sender, @Recipient, @Content, @Timestamp)";
-            cmd.Parameters.AddWithValue("@ID", localID);
-            cmd.Parameters.AddWithValue("@Sender", sender);
-            cmd.Parameters.AddWithValue("@Recipient", recipient);
-            cmd.Parameters.AddWithValue("@Content", content);
-            cmd.Parameters.AddWithValue("@timestamp", timeStamp);
-
+            string commandText = "INSERT INTO Messages(ID, Sender, Recipient, Content, Timestamp) VALUES(" +(long) (localID + 1) + ","+sender +", " +recipient + ", " + content + ", " + currentTimestamp + ");";
+            cmd = new SQLiteCommand(commandText, connection);
             cmd.ExecuteNonQuery();
-            Console.WriteLine(" \n Inserted Values To Message Table \n");
-        }
-
-        public void closeDatabase()
-        {
+            Console.WriteLine("Inserted Values To Message Table");
             connection.Close();
         }
+
+        
     }
 }

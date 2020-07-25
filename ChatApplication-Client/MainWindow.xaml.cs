@@ -14,5 +14,15 @@ namespace ChatApplication_Client
             InitializeComponent();
             client = new ClientApplication();
         }
+
+        //TODO: Format server response messages.
+        public void updateTextBoxMessagesFromServer(string serverResponse)
+        {
+
+            Send_Textbox.Text = serverResponse;
+
+        }
+
+
     }
 }

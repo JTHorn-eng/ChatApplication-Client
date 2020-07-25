@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,38 +8,17 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace ChatApplication_Client
 {
-    class ClientSecurity
+    public static class ClientSecurity
     {
 
-        private byte[] publicKey;
-        private byte[] IV;
-
-
-        //CLIENT MUST
-        /**
-         * Application init 
-         * Make server request, get encrypted AES symmetric key, IV and unencrypted RSA public key from server, get RSA private key from machine and decrypt SK and IV
-         * 
-         * Client sending message
-         * 1) hash plainText, encrypt using RSA public key 
-         * 2) AES encrypt message
-         * 3) Send encrypted message:signature
-         */
-
-
-
-        /*
-         * methods for retrieving keys are similar: if a key container with
-         * specified name doesn't exist, then one is created, else
-         * key is automatically loaded into the current AA object
-         * 
-         * THEREFORE ALWAYS CREATE A KEY FIRST
-         */
+        private static byte[] publicKey;
+        private static byte[] IV;
 
         //delete key if overwritting key first before generating new one
-        private static string GenKey(string containerName)
+        public static string GenKey(string containerName)
         {
 
             CspParameters p = new CspParameters();
@@ -55,7 +35,7 @@ namespace ChatApplication_Client
 
             return rsa2.ToXmlString(true);
         }
-        private static string RetrievePrivateKey(string containerName)
+        public static string RetrieveKeyPair(string containerName)
         {
             CspParameters p = new CspParameters();
             p.KeyContainerName = containerName;
@@ -64,8 +44,20 @@ namespace ChatApplication_Client
             return rsa.ToXmlString(true);
         }
 
+        //only retrieve RSA public key
+        public static string RetrievePublicKey(string containerName)
+        {
+            CspParameters p = new CspParameters();
+            p.KeyContainerName = containerName;
+
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(p);
+            return rsa.ToXmlString(false);
+
+
+        }
+
         //AES Encrypt
-        public byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] IV)
+        public static byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] IV)
         {
             if (plainText.Length <= 0 || key.Length <= 0 || IV.Length <= 0)
             {
@@ -82,10 +74,7 @@ namespace ChatApplication_Client
                 CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
                 StreamWriter swEncrypt = new StreamWriter(csEncrypt);
                 swEncrypt.Write(plainText);
-
                 return msEncrypt.ToArray();
-
-
             }
             else
             {
@@ -95,7 +84,7 @@ namespace ChatApplication_Client
         }
 
         //AES Decrypt
-        public string DecryptBytesToString_Aes(byte[] cipherText, byte[] key, byte[] IV)
+        public static string DecryptBytesToString_Aes(byte[] cipherText, byte[] key, byte[] IV)
         {
             string plainText = null;
             if (cipherText.Length <= 0 || key.Length <= 0 || IV.Length <= 0)
@@ -126,7 +115,7 @@ namespace ChatApplication_Client
 
 
         //RSA Encrypt
-        public byte[] RSAEncryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
+        public static byte[] RSAEncryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
         {
             try
             {
@@ -146,7 +135,7 @@ namespace ChatApplication_Client
 
 
         //RSA Decrypt
-        public byte[] RSADecryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
+        public static byte[] RSADecryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
         {
             try
             {
@@ -163,7 +152,7 @@ namespace ChatApplication_Client
             return null;
         }
 
-        public byte[] generateDigitalSignature(string plainText)
+        public static byte[] generateDigitalSignature(string plainText)
         {
             //hash message
             HashAlgorithm sha = new SHA1CryptoServiceProvider();

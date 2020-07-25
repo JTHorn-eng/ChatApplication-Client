@@ -3,6 +3,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using ChatApplication_Client;
+using Chat.client;
+
 
 
 // State object for receiving data from the server
@@ -24,6 +27,8 @@ public static class Client
 {
     // Chat username. Should probably be relocated to another class
     public static string chatUsername = "bobby_jones";
+    public static string chatRecipient = "alice_jones";
+    public static string serverResponseMessages = "";
 
     // MREs for signalling when threads may proceed
     private static ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -122,10 +127,12 @@ public static class Client
             Console.WriteLine("[INFO] Key pair generation request received");
             Console.WriteLine("[INFO] Generating key pair and sending public key to server");
 
-            // TODO: Generate key pair and send the pub key
+            
+            //Generate key pair with client username as container name
+            ClientSecurity.GenKey(chatUsername);
 
             // Send the pub key to the server
-            Send(client, "KEYS: mykey<EOF>");
+            Send(client, "PUBKEY:" + ClientSecurity.RetrievePublicKey(chatUsername) +"<EOF>");
 
             // Recieve messages from the server
             serverResponse = Receive(client);
@@ -134,8 +141,20 @@ public static class Client
         // We've got messages from the server
         Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
-        // TODO: Add messages to the local database and display in GUI
+
+
+        //Add messages to the local database and display in GUI
+        Database.UpdateMessageTable(chatUsername, chatRecipient, serverResponse);
+        serverResponseMessages = serverResponse;
     }
+
+    //Get current server response messages
+    public static string getServerResponseMessages()
+    {
+        return serverResponseMessages;
+    }
+
+
 
     // Receive data from the server. Blocks parent thread execution
     private static string Receive(Socket client)

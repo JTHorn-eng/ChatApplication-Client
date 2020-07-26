@@ -1,45 +1,47 @@
 using System;
 using System.Data.SQLite;
+using System.Windows.Media.Animation;
 
 namespace Chat.client
 {
     public static class Database
     {
 
-        private static string message_objects_location = "Chat/dbfiles/messages.db";
-        private static long localID = 0;
+        private static string message_objects_location = @"URI=file:C:\Users\horn1\source\repos\ChatApplication-Client\ChatApplication-Client\database\messages.db";
+        private static Int32 localID = 0;
 
         private static void GetUpdatedID()
         {
             SQLiteConnection connection = new SQLiteConnection(message_objects_location);
             connection.Open();
-            SQLiteTransaction transaction = null;
-            transaction = connection.BeginTransaction();
-            localID = connection.LastInsertRowId;
-            transaction.Commit();
+            string commandText = "SELECT rowid FROM Messages WHERE rowid = (SELECT MAX(rowid) FROM Messages) ";
+            SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
+            SQLiteDataReader r = cmd.ExecuteReader();
+            if (r.Read())
+                localID = (Int32)r.GetInt64(0);
             connection.Close();
         }
         public static String GetTimestamp(this DateTime value)
         {
             return value.ToString("yyyyMMddHHmmssfff");
         }
-        public static void UpdateMessageTable(string sender, string recipient, string content)
+        public static void UpdateMessageTable(string sender, string serverResponse)
         {
-
+            string[] messageObject = serverResponse.Split(':');
             SQLiteConnection connection = new SQLiteConnection(message_objects_location);
             connection.Open();
             //retrieve timestamp
             string currentTimestamp = GetTimestamp(new DateTime());
 
+            //find most recent ID
+            GetUpdatedID();
+
             //form insert SQL statement
-            SQLiteCommand cmd = new SQLiteCommand(connection);
-            string commandText = "INSERT INTO Messages(ID, Sender, Recipient, Content, Timestamp) VALUES(" +(long) (localID + 1) + ","+sender +", " +recipient + ", " + content + ", " + currentTimestamp + ");";
-            cmd = new SQLiteCommand(commandText, connection);
+            string commandText = "INSERT INTO Messages(rowid, Sender, Recipient, Content, Timestamp) VALUES ('" + ((Int32) (localID + 1)).ToString() + "','" + messageObject[2] +"','" + messageObject[3] + "','" + messageObject[4] + "','" + messageObject[5] + "');";
+            SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
             cmd.ExecuteNonQuery();
             Console.WriteLine("Inserted Values To Message Table");
             connection.Close();
         }
-
-        
     }
 }

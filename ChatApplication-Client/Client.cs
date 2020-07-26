@@ -144,7 +144,8 @@ public static class Client
 
 
         //Add messages to the local database and display in GUI
-        Database.UpdateMessageTable(chatUsername, chatRecipient, serverResponse);
+        
+        Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", ""));
         serverResponseMessages = serverResponse;
     }
 

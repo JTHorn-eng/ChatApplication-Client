@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ChatApplication_Client
+namespace ChatClient
 {
     public static class ClientShareData
     {
@@ -31,12 +28,13 @@ namespace ChatApplication_Client
             if (messageQueue.Count > 0)
             {
                 return messageQueue.Dequeue() + "<EOF>";
-            } else
+            }
+            else
             {
                 return "No new messages<EOF>";
             }
         }
-       
+
 
 
 

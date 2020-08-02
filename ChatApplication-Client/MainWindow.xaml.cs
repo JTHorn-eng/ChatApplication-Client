@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Xml.Schema;
 
-namespace ChatApplication_Client
+namespace ChatClient
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -17,7 +15,7 @@ namespace ChatApplication_Client
     }
     public partial class MainWindow : Window
     {
-        private ClientApplication client;
+        private ClientApplication clientApp;
         private ListBox lb;
         
         private string currentMessage = "";
@@ -25,7 +23,7 @@ namespace ChatApplication_Client
         public MainWindow()
         {
             InitializeComponent();
-            client = new ClientApplication();
+            clientApp = new ClientApplication();
             lb = new ListBox();
         }
 
@@ -54,6 +52,11 @@ namespace ChatApplication_Client
             Console.WriteLine("Added new message");
             Message_Area.Children.Add(message);
            
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            clientApp.Close();
         }
 
     }

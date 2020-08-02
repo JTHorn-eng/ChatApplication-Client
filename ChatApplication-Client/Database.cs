@@ -1,13 +1,12 @@
 using System;
 using System.Data.SQLite;
-using System.Windows.Media.Animation;
 
-namespace Chat.client
+namespace ChatClient
 {
     public static class Database
     {
 
-        private static string message_objects_location = @"URI=file:C:\Users\horn1\source\repos\ChatApplication-Client\ChatApplication-Client\database\messages.db";
+        private static string message_objects_location = @"URI=file:C:\Users\laure\Documents\Repos\TornadoClient\ChatApplication-Client\ChatApplication-Client\database\messages.db";
         private static Int32 localID = 0;
 
         private static void GetUpdatedID()

@@ -1,15 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 
-namespace ChatApplication_Client
+namespace ChatClient
 {
     public static class ClientSecurity
     {

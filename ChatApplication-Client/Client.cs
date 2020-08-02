@@ -19,6 +19,7 @@ public class StateObject
     public byte[] buffer = new byte[BufferSize];
     // Received data string
     public StringBuilder sb = new StringBuilder();
+    
 }
 
 // Functions as an async socket client
@@ -29,6 +30,8 @@ public static class Client
     public static string chatUsername = "bobby_jones";
     public static string chatRecipient = "alice_jones";
     public static string serverResponseMessages = "";
+    public static string currentMessage = "";
+    
 
     // MREs for signalling when threads may proceed
     private static ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -41,6 +44,9 @@ public static class Client
     // Initialises connection to server then keeps listening for data from server
     public static void Start()
     {
+        //Set username for messages displayed in the GUI
+        ClientShareData.setUsername(chatUsername);
+
         // Connect to a remote device.  
         try
         {
@@ -68,7 +74,9 @@ public static class Client
             {
                 sendDone.Reset();
                 Console.WriteLine("[INFO] Sending test message to server");
-                Send(client, "This is a test<EOF>");
+                Console.WriteLine(ClientShareData.readClientMessage());
+                Send(client, ClientShareData.readClientMessage());
+                //Send(client, ClientShareData.readClientMessage());
                 sendDone.WaitOne();
                 Thread.Sleep(5000);
             }
@@ -120,8 +128,8 @@ public static class Client
         // Server responds with either "KEY_GEN_REQUEST: <EOF>" or "MESSAGES: dummy_messages<EOF>"
         // We parse this string to find out which one
         string serverCommand = serverResponse.Split(":".ToCharArray())[0];
-
-        if (serverCommand == "KEY_GEN_REQUEST")
+        Console.WriteLine("asdhahf: " + serverCommand);
+        if (serverCommand.Equals("KEY_GEN_REQUEST"))
         {
             // The server has requested a public key
             Console.WriteLine("[INFO] Key pair generation request received");
@@ -129,10 +137,12 @@ public static class Client
 
             
             //Generate key pair with client username as container name
+            //If key pair already generated, nothing happens
             ClientSecurity.GenKey(chatUsername);
-
+            
             // Send the pub key to the server
-            Send(client, "PUBKEY:" + ClientSecurity.RetrievePublicKey(chatUsername) +"<EOF>");
+            Console.WriteLine(ClientSecurity.RetrievePublicKey(chatUsername));
+            Send(client, "PUBKEY:" + ClientSecurity.RetrievePublicKey(chatUsername) +" <EOF>");
 
             // Recieve messages from the server
             serverResponse = Receive(client);
@@ -147,6 +157,8 @@ public static class Client
         
         Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", ""));
         serverResponseMessages = serverResponse;
+
+
     }
 
     //Get current server response messages

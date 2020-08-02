@@ -26,6 +26,7 @@
 
             </Grid.RowDefinitions>
             <ScrollViewer Grid.Row="1"></ScrollViewer>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="128,65,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
 
         </Grid>
         <Grid Grid.Column="1" >
@@ -38,7 +39,13 @@
                 </RowDefinition>
 
             </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0">Testing</ScrollViewer>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Row="0">
+                <StackPanel HorizontalAlignment="Left" Height="332" VerticalAlignment="Top" Width="530" Name="Message_Area">
+                    
+                </StackPanel>
+            </ScrollViewer>
+            
+
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="381*">
@@ -48,8 +55,8 @@
 
                     </ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox"/>
-                <Button Grid.Column="1" Content="Send"/>
+                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox" />
+                <Button Grid.Column="1" Content="Send" Click="Send_Message"/>
             </Grid>
         </Grid>
 

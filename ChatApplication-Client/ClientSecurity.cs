@@ -3,7 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-
 namespace ChatClient
 {
     public static class ClientSecurity
@@ -12,24 +11,29 @@ namespace ChatClient
         private static byte[] publicKey;
         private static byte[] IV;
 
-        //delete key if overwritting key first before generating new one
+        //Generates a new symmetric key and stores it in key container. If the key already
+        //exists, then a new key is generated. Returns public-private key pair
+   
         public static string GenKey(string containerName)
         {
-
+            //Generate a new key container.
             CspParameters p = new CspParameters();
             p.KeyContainerName = containerName;
 
+            //Generate public, private key pair
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(p);
             rsa.PersistKeyInCsp = false;
 
+            //Overwrite key pair if same containerName is specified
             rsa.Clear();
             CspParameters p2 = new CspParameters();
             p.KeyContainerName = containerName;
 
             RSACryptoServiceProvider rsa2 = new RSACryptoServiceProvider(p2);
-
             return rsa2.ToXmlString(true);
         }
+
+        //Retrieve key pair with specified key container name. Returns public-private key pair
         public static string RetrieveKeyPair(string containerName)
         {
             CspParameters p = new CspParameters();
@@ -39,7 +43,7 @@ namespace ChatClient
             return rsa.ToXmlString(true);
         }
 
-        //only retrieve RSA public key
+        //Only retrieve RSA public key
         public static string RetrievePublicKey(string containerName)
         {
             CspParameters p = new CspParameters();
@@ -51,7 +55,7 @@ namespace ChatClient
 
         }
 
-        //AES Encrypt
+        //Encrypt plaintext using AES algorithm. Returns the ciphertext
         public static byte[] EncryptStringToBytes_Aes(string plainText, byte[] key, byte[] IV)
         {
             if (plainText.Length <= 0 || key.Length <= 0 || IV.Length <= 0)
@@ -64,7 +68,7 @@ namespace ChatClient
                 //create an ecryptor to perform the stream transform.
                 ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
-                //Create the streams used for encryption
+                //Create the byte streams used for encryption
                 MemoryStream msEncrypt = new MemoryStream();
                 CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
                 StreamWriter swEncrypt = new StreamWriter(csEncrypt);
@@ -78,7 +82,7 @@ namespace ChatClient
             }
         }
 
-        //AES Decrypt
+        //Decrypt ciphertext using AES algorithm. Returns the plaintext
         public static string DecryptBytesToString_Aes(byte[] cipherText, byte[] key, byte[] IV)
         {
             string plainText = null;
@@ -91,14 +95,13 @@ namespace ChatClient
                 //create an ecryptor to perform the stream transform.
                 ICryptoTransform decryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
-                //Create the streams used for encryption
+                //Create the byte streams used for encryption
                 MemoryStream msDecrypt = new MemoryStream(cipherText);
                 CryptoStream cdDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
                 StreamReader srDecrypt = new StreamReader(cdDecrypt);
                 plainText = srDecrypt.ReadToEnd();
 
                 return plainText;
-
             }
             else
             {
@@ -107,9 +110,7 @@ namespace ChatClient
             }
         }
 
-
-
-        //RSA Encrypt
+        //Encrypt data using RSA algorithm. Returns the encrypted data
         public static byte[] RSAEncryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
         {
             try
@@ -127,9 +128,7 @@ namespace ChatClient
             return null;
         }
 
-
-
-        //RSA Decrypt
+        //Decrypt data using RSA algorithm. Returns the decrypted data
         public static byte[] RSADecryption(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
         {
             try
@@ -147,14 +146,12 @@ namespace ChatClient
             return null;
         }
 
-        public static byte[] generateDigitalSignature(string plainText)
+        //generate a digital signature for a message using the plaintext
+        public static byte[] GenerateDigitalSignature(string plainText)
         {
             //hash message
             HashAlgorithm sha = new SHA1CryptoServiceProvider();
             return sha.ComputeHash(Encoding.UTF8.GetBytes(plainText));
         }
-
-
-
     }
 }

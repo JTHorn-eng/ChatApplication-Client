@@ -5,25 +5,26 @@ namespace ChatClient
 {
     public static class ClientShareData
     {
+        //queue for reading and writing messages between GUI thread and clientSocket thread
         private static Queue<string> messageQueue = new Queue<string>();
         private static string username = "";
+        
         public static void AddClientMessage(string m)
         {
-            Console.WriteLine("New Message: " + m);
             messageQueue.Enqueue(m);
         }
 
-        public static string getUsername()
+        public static string GetUsername()
         {
             return username;
         }
 
-        public static void setUsername(string name)
+        public static void SetUsername(string name)
         {
             username = name;
         }
 
-        public static string readClientMessage()
+        public static string ReadClientMessage()
         {
             if (messageQueue.Count > 0)
             {
@@ -34,9 +35,5 @@ namespace ChatClient
                 return "No new messages<EOF>";
             }
         }
-
-
-
-
     }
 }

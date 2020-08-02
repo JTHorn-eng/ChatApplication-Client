@@ -18,7 +18,6 @@ namespace ChatClient
         public byte[] buffer = new byte[BufferSize];
         // Received data string
         public StringBuilder sb = new StringBuilder();
-
     }
 
     // Functions as an async socket client
@@ -30,7 +29,6 @@ namespace ChatClient
         public static string chatRecipient = "alice_jones";
         public static string serverResponseMessages = "";
         public static string currentMessage = "";
-
 
         // MREs for signalling when threads may proceed
         private static ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -47,7 +45,7 @@ namespace ChatClient
         public static void Start()
         {
             //Set username for messages displayed in the GUI
-            ClientShareData.setUsername(chatUsername);
+            ClientShareData.SetUsername(chatUsername);
 
             try
             {
@@ -75,8 +73,8 @@ namespace ChatClient
                 {
                     sendDone.Reset();
                     Console.WriteLine("[INFO] Sending test message to server");
-                    Console.WriteLine(ClientShareData.readClientMessage());
-                    Send(client, ClientShareData.readClientMessage());
+                    Console.WriteLine(ClientShareData.ReadClientMessage());
+                    Send(client, ClientShareData.ReadClientMessage());
                     sendDone.WaitOne();
                     Thread.Sleep(5000);
                 }
@@ -163,8 +161,6 @@ namespace ChatClient
         {
             return serverResponseMessages;
         }
-
-
 
         // Receive data from the server. Blocks parent thread execution
         private static string Receive(Socket client)

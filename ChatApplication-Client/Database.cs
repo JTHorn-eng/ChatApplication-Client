@@ -6,9 +6,10 @@ namespace ChatClient
     public static class Database
     {
 
-        private static string message_objects_location = @"URI=file:C:\Users\laure\Documents\Repos\TornadoClient\ChatApplication-Client\ChatApplication-Client\database\messages.db";
-        private static Int32 localID = 0;
+        private static string message_objects_location = @"URI=file:\database\messages.db";
+        private static Int32 localID = 0; //stores the most recent id for a message in the Messages table
 
+        //Retrieve the most recent ID value from the Messages table
         private static void GetUpdatedID()
         {
             SQLiteConnection connection = new SQLiteConnection(message_objects_location);
@@ -20,10 +21,14 @@ namespace ChatClient
                 localID = (Int32)r.GetInt64(0);
             connection.Close();
         }
+
+        //Get current timestamp for message objects
         public static String GetTimestamp(this DateTime value)
         {
             return value.ToString("yyyyMMddHHmmssfff");
         }
+
+        //Add messages from the server to the client's Messages table
         public static void UpdateMessageTable(string sender, string serverResponse)
         {
             string[] messageObject = serverResponse.Split(':');

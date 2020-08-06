@@ -49,28 +49,24 @@ namespace ChatClient
             //Set username for messages displayed in the GUI
             ClientShareData.SetUsername(chatUsername);
 
-            //Constantly attempt to connect to server, with timeout
-            while (!isConnected && !nonSocketException)
+            //Constantly attempt to connect to server recursively, with timeout
+            AttemptConnection();
+            
+            //if the client is connected and the connection attempt hasn't returned a nonSocketException i.e. the program works
+            //with no errors, then procede with client processes
+            if (isConnected || !nonSocketException)
             {
-                Console.WriteLine("Attempting to connect to server");
-                AttemptConnection();
+                RunClientProcesses();
             }
-
-            RunClientProcesses();
             
         }
-
 
         //Attempt to connect to server
         public static void AttemptConnection()
         {
-            //number of connection attempts before timeout
-            int numAttempts = 5;
-            int attempts = 0;
-            while (attempts >= numAttempts)
-            {
                 try
                 {
+                    
                     // Initialises endpoint (IP + port) to connect to
                     IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
 
@@ -87,25 +83,25 @@ namespace ChatClient
 
                     Console.WriteLine("[INFO] Connected to server");
 
-                    // Perform handshake to get established with server
+                // Perform handshake to get established with server
+                if (isConnected)
+                {
                     ChatHandshake(client);
+                } 
 
                 }
                 catch (SocketException e)
                 {
                     Console.WriteLine(e.ToString());
+                    //timeout
+                    Thread.Sleep(3000);
+                    AttemptConnection();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
                     nonSocketException = true;
-                }
-
-                //timeout
-                Thread.Sleep(500);
-                attempts++;
-            }
-            Console.WriteLine("Connection attempt failed");
+                }                
         }
 
         //Run any client methods when connected to server
@@ -123,10 +119,7 @@ namespace ChatClient
                     foreach (string messages in ClientShareData.GetMessageQueue()) {
 
                         string messageRead = ClientShareData.ReadClientMessage();
-
-
-
-
+                        //messages are read if they are not empty
                         if (!messageRead.Equals(""))
                         {
                             Console.WriteLine("New Message: " + messageRead);
@@ -143,9 +136,18 @@ namespace ChatClient
         // Closes connection to server
         public static void Stop()
         {
-
-            client.Shutdown(SocketShutdown.Both);
-            client.Close();
+            try
+            {
+                client.Shutdown(SocketShutdown.Both);
+                client.Close();
+                //Force close all running threads
+                Environment.Exit(Environment.ExitCode);
+            } catch (Exception e)
+            {
+                Console.WriteLine("Error when closing: " + e.Message);
+                //Force close all running threads
+                Environment.Exit(Environment.ExitCode); 
+            }
         }
 
         // Handle connection to the server
@@ -161,10 +163,16 @@ namespace ChatClient
 
                 // Signal that the connection has been made so the main thread can continue
                 connectionDone.Set();
+
+                //Set isConnected to true to prevent anymore connection attempts to server
+                isConnected = true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine("Could not complete connect callback" + e.ToString());
+                //timeout
+                Thread.Sleep(3000);
+                AttemptConnection();
             }
         }
 

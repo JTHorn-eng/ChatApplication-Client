@@ -111,25 +111,26 @@ namespace ChatClient
             // Every 100 milliseconds, perform client processes
             while (true)
             {
-                sendDone.Reset();
                 //If person has clicked send in the GUI, send the message.
                 if (ClientShareData.GetSendButtonClicked())
                 {
                     //handle all messages in the queue.
-                    foreach (string messages in ClientShareData.GetMessageQueue()) {
+                    foreach (string message in ClientShareData.GetMessageQueue()) {
 
-                        string messageRead = ClientShareData.ReadClientMessage();
+                        
                         //messages are read if they are not empty
-                        if (!messageRead.Equals(""))
+                        if (!message.Equals(""))
                         {
-                            Console.WriteLine("New Message: " + messageRead);
-                            Send(client, messageRead);
-
-                            ClientShareData.SetSendButtonClicked(false);
-                            sendDone.WaitOne();
+                            Console.WriteLine("New Message: " + message);
+                            Send(client, message);
 
                         }
                     }
+                    for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                    {
+                        string messageRead = ClientShareData.ReadClientMessage();
+                    }
+                    ClientShareData.SetSendButtonClicked(false);
                 }
 
 

@@ -81,7 +81,7 @@ namespace ChatClient
         //Encrypt plaintext using AES algorithm. Returns the ciphertext
         private static byte[] EncryptStringToBytes_Aes(string plainText)
         {
-            if (plainText.Length <= 0)
+            if (plainText.Length >= 0)
             {
                 //create an AES object, key and IV
                 Aes aesAlg = Aes.Create();
@@ -109,8 +109,10 @@ namespace ChatClient
         //Generates fully encrypted message
         //Currently uses client username as containerName
         //OUTPUT-FORMAT: cipher-text|encrypted-AES-public-key|encrypted-IV
-        public static string sendEncryptedMessage(string plainText, string containerName)
+        public static string EncryptMessage(string plainText, string containerName)
         {
+
+            Console.WriteLine("ASDASDASD: " + plainText);
             return Encoding.UTF8.GetString(EncryptStringToBytes_Aes(plainText)) + "|"
                   + Encoding.UTF8.GetString(RSAEncryption(publicKey, GetPublicKeyInfo(containerName), false)) + "|"
                   + Encoding.UTF8.GetString(RSAEncryption(IV, GetPublicKeyInfo(containerName), false));
@@ -119,7 +121,7 @@ namespace ChatClient
         //Decrypt fully encrypted message
         //Currently uses client username as containerName
         //OUTPUT-FORMAT: plain-text
-        public static string decryptMessage(string inputText, string containerName)
+        public static string DecryptMessage(string inputText, string containerName)
         {
             //Decrypt AES public key and IV
             byte[] publicKey = Encoding.UTF8.GetBytes(inputText.Split('|')[1]);

@@ -126,7 +126,7 @@ namespace ChatClient
                         if (!message.Equals(""))
                         {
                             Console.WriteLine("New Message: " + message);
-                            Send(client, "MESSAGES:jane;" + message + "<EOF>");
+                            Send(client, "MESSAGES:jane;" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
 
                         }
                     }

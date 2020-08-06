@@ -28,7 +28,9 @@ namespace ChatClient
         public static string chatUsername = "bobby_jones";
         public static string chatRecipient = "alice_jones";
         public static string serverResponseMessages = "";
-        public static string currentMessage = "";
+        public static string currentMessage = ""; 
+        public static bool isConnected = false;
+        public static bool nonSocketException = false;
 
         // MREs for signalling when threads may proceed
         private static ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -47,47 +49,101 @@ namespace ChatClient
             //Set username for messages displayed in the GUI
             ClientShareData.SetUsername(chatUsername);
 
-            try
+            //Constantly attempt to connect to server, with timeout
+            while (!isConnected && !nonSocketException)
             {
-                // Initialises endpoint (IP + port) to connect to
-                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
-
-                // Create a TCP/IP socket
-                client = new Socket(IPAddress.Parse(ServerIP).AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                Console.WriteLine("[INFO] Connecting to server");
-
-                // Connect to the server
-                client.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), client);
-
-                // Wait until connection is made
-                connectionDone.WaitOne();
-
-                Console.WriteLine("[INFO] Connected to server");
-
-                // Perform handshake to get established with server
-                ChatHandshake(client);
-
-                // Send a test message to the server every 5 seconds
-                while (true)
-                {
-                    sendDone.Reset();
-                    Console.WriteLine("[INFO] Sending test message to server");
-                    Console.WriteLine(ClientShareData.ReadClientMessage());
-                    Send(client, ClientShareData.ReadClientMessage());
-                    sendDone.WaitOne();
-                    Thread.Sleep(5000);
-                }
+                Console.WriteLine("Attempting to connect to server");
+                AttemptConnection();
             }
-            catch (Exception e)
+
+            RunClientProcesses();
+            
+        }
+
+
+        //Attempt to connect to server
+        public static void AttemptConnection()
+        {
+            //number of connection attempts before timeout
+            int numAttempts = 5;
+            int attempts = 0;
+            while (attempts >= numAttempts)
             {
-                Console.WriteLine(e.ToString());
+                try
+                {
+                    // Initialises endpoint (IP + port) to connect to
+                    IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
+
+                    // Create a TCP/IP socket
+                    client = new Socket(IPAddress.Parse(ServerIP).AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                    Console.WriteLine("[INFO] Connecting to server");
+
+                    // Connect to the server
+                    client.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), client);
+
+                    // Wait until connection is made
+                    connectionDone.WaitOne();
+
+                    Console.WriteLine("[INFO] Connected to server");
+
+                    // Perform handshake to get established with server
+                    ChatHandshake(client);
+
+                }
+                catch (SocketException e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    nonSocketException = true;
+                }
+
+                //timeout
+                Thread.Sleep(500);
+                attempts++;
+            }
+            Console.WriteLine("Connection attempt failed");
+        }
+
+        //Run any client methods when connected to server
+        private static void RunClientProcesses()
+        {
+            // Every 100 milliseconds, perform client processes
+            while (true)
+            {
+                sendDone.Reset();
+                Console.WriteLine("[INFO] Sending test message to server");
+                //If person has clicked send in the GUI, send the message.
+                if (ClientShareData.GetSendButtonClicked())
+                {
+                    //handle all messages in the queue.
+                    foreach (string messages in ClientShareData.GetMessageQueue()) {
+
+                        string messageRead = ClientShareData.ReadClientMessage();
+
+
+
+
+                        if (!messageRead.Equals(""))
+                        {
+                            Console.WriteLine("New Message: " + messageRead);
+                            Send(client, messageRead);
+                            ClientShareData.SetSendButtonClicked(false);
+                        }
+                    }
+                }
+                sendDone.WaitOne();
+                Thread.Sleep(100);
             }
         }
 
         // Closes connection to server
         public static void Stop()
         {
+
             client.Shutdown(SocketShutdown.Both);
             client.Close();
         }
@@ -148,12 +204,17 @@ namespace ChatClient
                 serverResponse = Receive(client);
             }
 
+
+
+
+
             // We've got messages from the server
             Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
             //Add messages to the local database and display in GUI
             Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", ""));
             serverResponseMessages = serverResponse;
+            isConnected = true;
         }
 
         //Get current server response messages

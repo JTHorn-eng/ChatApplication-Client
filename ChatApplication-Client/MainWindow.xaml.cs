@@ -32,6 +32,7 @@ namespace ChatClient
         {
             currentMessage = Send_Textbox.Text;
             ClientShareData.AddClientMessage(currentMessage);
+            ClientShareData.SetSendButtonClicked(true);
             updateMessageArea(currentMessage);
 
             Console.WriteLine(Send_Textbox.Text);
@@ -48,7 +49,7 @@ namespace ChatClient
         public void updateMessageArea(string serverResponse)
         {
             Label message = new Label();
-            message.Content = ClientShareData.getUsername() + ": "+ serverResponse;
+            message.Content = ClientShareData.GetUsername() + ": "+ serverResponse;
             Console.WriteLine("Added new message");
             Message_Area.Children.Add(message);
            

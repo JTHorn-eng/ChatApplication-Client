@@ -6,7 +6,7 @@ namespace ChatClient
     public static class Database
     {
 
-        private static string message_objects_location = @"URI=file:\database\messages.db";
+        private static string message_objects_location = @"URI=file:C:\ChatAppClient\messages.db";
         private static Int32 localID = 0; //stores the most recent id for a message in the Messages table
 
         //Retrieve the most recent ID value from the Messages table

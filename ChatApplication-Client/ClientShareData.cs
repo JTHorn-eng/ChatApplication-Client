@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.RightsManagement;
 
 namespace ChatClient
 {
@@ -8,7 +9,23 @@ namespace ChatClient
         //queue for reading and writing messages between GUI thread and clientSocket thread
         private static Queue<string> messageQueue = new Queue<string>();
         private static string username = "";
-        
+        private static bool sendButtonClicked = false;
+
+
+        public static Queue<String> GetMessageQueue()
+        {
+            return messageQueue;
+        }
+        public static bool GetSendButtonClicked()
+        {
+            return sendButtonClicked;
+        }
+
+        public static void SetSendButtonClicked(bool a)
+        {
+            sendButtonClicked = a;
+        }
+
         public static void AddClientMessage(string m)
         {
             messageQueue.Enqueue(m);
@@ -32,7 +49,7 @@ namespace ChatClient
             }
             else
             {
-                return "No new messages<EOF>";
+                return "";
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using System.Windows;
 
 namespace ChatClient
 {
@@ -43,6 +44,8 @@ namespace ChatClient
         // Socket to connect to the server
         private static Socket client;
 
+        public static bool initialised = false;
+
         // Initialises connection to server then keeps listening for data from server and sending messages entered into the GUI
         public static void Start()
         {
@@ -56,6 +59,7 @@ namespace ChatClient
             //with no errors, then procede with client processes
             if (isConnected || !nonSocketException)
             {
+                initialised = true;
                 Console.WriteLine("[INFO] Running client processes");
                 RunClientProcesses();
             }
@@ -122,7 +126,7 @@ namespace ChatClient
                         if (!message.Equals(""))
                         {
                             Console.WriteLine("New Message: " + message);
-                            Send(client, message + "<EOF>");
+                            Send(client, "MESSAGES:jane;" + message + "<EOF>");
 
                         }
                     }

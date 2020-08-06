@@ -25,8 +25,24 @@
                 </RowDefinition>
 
             </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="1"></ScrollViewer>
-            <TextBox HorizontalAlignment="Left" Height="23" Margin="128,65,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+
+            <Border Grid.Row="0" BorderThickness="0,0,1,0" BorderBrush="DarkGray">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBox Grid.Row="0" HorizontalAlignment="Left" Height="23" Margin="128,65,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="0,1,0,0">
+                <ScrollViewer>
+                    <Grid x:Name="UserListGrid">
+
+                    </Grid>
+
+                </ScrollViewer>
+            </Border>
 
         </Grid>
         <Grid Grid.Column="1" >
@@ -34,7 +50,7 @@
                 <RowDefinition Height="332*">
 
                 </RowDefinition>
-                <RowDefinition Height="87*">
+                <RowDefinition Height="50">
 
                 </RowDefinition>
 
@@ -55,7 +71,7 @@
 
                     </ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Text="Hello Is this working" Name="Send_Textbox" />
+                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Name="Send_Textbox" />
                 <Button Grid.Column="1" Content="Send" Click="Send_Message"/>
             </Grid>
         </Grid>

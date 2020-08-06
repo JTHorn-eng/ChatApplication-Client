@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace ChatClient
 {
@@ -9,22 +13,28 @@ namespace ChatClient
     /// </summary>
     /// 
 
-    public class MyObject
-    {
-        public string Name { get; set; }
-    }
     public partial class MainWindow : Window
     {
         private ClientApplication clientApp;
-        private ListBox lb;
         
         private string currentMessage = "";
+
+        private bool applicationRunning = true;
 
         public MainWindow()
         {
             InitializeComponent();
             clientApp = new ClientApplication();
-            lb = new ListBox();
+            while(applicationRunning)
+            {
+                if(Client.initialised)
+                {
+                    UpdateUsersSidebar(Database.GetFriendsList());
+                    break;
+                }
+
+                Thread.Sleep(200);
+            }
         }
 
 
@@ -57,7 +67,36 @@ namespace ChatClient
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            applicationRunning = false;
             clientApp.Close();
+        }
+
+        // Accepts a list of usernames and adds a clickable TextBlock in a Border to the users sidebar of the GUI for each username
+        public void UpdateUsersSidebar(List<String> users)
+        {
+            int rowChildNumber = 0;
+
+            foreach (string user in users)
+            {
+                RowDefinition row = new RowDefinition();
+                row.Height = new GridLength(30);
+                UserListGrid.RowDefinitions.Add(row);
+
+                Border border = new Border();
+                border.BorderThickness = new Thickness(0, 0, 0, 1);
+                border.BorderBrush = Brushes.DarkGray;
+
+                TextBlock text = new TextBlock();
+                text.Padding = new Thickness(5, 5, 0, 0);
+                text.Text = user;
+
+                border.Child = text;
+                UserListGrid.Children.Add(border);
+
+                border.SetValue(Grid.RowProperty, rowChildNumber);
+
+                rowChildNumber++;
+            }
         }
 
     }

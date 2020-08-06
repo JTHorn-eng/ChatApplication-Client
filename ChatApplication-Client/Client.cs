@@ -122,7 +122,7 @@ namespace ChatClient
                         if (!message.Equals(""))
                         {
                             Console.WriteLine("New Message: " + message);
-                            Send(client, message);
+                            Send(client, message + "<EOF>");
 
                         }
                     }

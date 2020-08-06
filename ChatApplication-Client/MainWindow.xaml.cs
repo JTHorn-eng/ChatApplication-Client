@@ -50,7 +50,7 @@ namespace ChatClient
         {
             Label message = new Label();
             message.Content = ClientShareData.GetUsername() + ": "+ serverResponse;
-            Console.WriteLine("Added new message");
+            Console.WriteLine("[INFO] Added new message");
             Message_Area.Children.Add(message);
            
         }

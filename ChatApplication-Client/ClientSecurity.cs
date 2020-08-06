@@ -156,7 +156,7 @@ namespace ChatClient
             }
             else
             {
-                Console.WriteLine("Could not decrypt cipherText");
+                Console.WriteLine("[INFO] Could not decrypt cipherText");
                 return "";
             }
         }

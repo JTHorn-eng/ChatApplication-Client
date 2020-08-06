@@ -56,6 +56,7 @@ namespace ChatClient
             //with no errors, then procede with client processes
             if (isConnected || !nonSocketException)
             {
+                Console.WriteLine("[INFO] Running client processes");
                 RunClientProcesses();
             }
             
@@ -111,7 +112,6 @@ namespace ChatClient
             while (true)
             {
                 sendDone.Reset();
-                Console.WriteLine("[INFO] Sending test message to server");
                 //If person has clicked send in the GUI, send the message.
                 if (ClientShareData.GetSendButtonClicked())
                 {
@@ -124,12 +124,15 @@ namespace ChatClient
                         {
                             Console.WriteLine("New Message: " + messageRead);
                             Send(client, messageRead);
+
                             ClientShareData.SetSendButtonClicked(false);
+                            sendDone.WaitOne();
+
                         }
                     }
                 }
-                sendDone.WaitOne();
-                Thread.Sleep(100);
+
+
             }
         }
 

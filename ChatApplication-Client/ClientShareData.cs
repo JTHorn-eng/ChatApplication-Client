@@ -7,7 +7,7 @@ namespace ChatClient
     public static class ClientShareData
     {
         //queue for reading and writing messages between GUI thread and clientSocket thread
-        private static Queue<string> messageQueue = new Queue<string>();
+        public static Queue<string> messageQueue = new Queue<string>();
         private static string username = "";
         private static bool sendButtonClicked = false;
 

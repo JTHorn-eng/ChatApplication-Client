@@ -34,18 +34,26 @@ namespace ChatClient
             string[] messageObject = serverResponse.Split(':');
             SQLiteConnection connection = new SQLiteConnection(message_objects_location);
             connection.Open();
-            //retrieve timestamp
-            string currentTimestamp = GetTimestamp(new DateTime());
 
-            //find most recent ID
-            GetUpdatedID();
+            if (!serverResponse.Equals(""))
+            {
 
-            //form insert SQL statement
-            string commandText = "INSERT INTO Messages(rowid, Sender, Recipient, Content, Timestamp) VALUES ('" + ((Int32) (localID + 1)).ToString() + "','" + messageObject[2] +"','" + messageObject[3] + "','" + messageObject[4] + "','" + messageObject[5] + "');";
-            SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
-            cmd.ExecuteNonQuery();
-            Console.WriteLine("Inserted Values To Message Table");
-            connection.Close();
+                //retrieve timestamp
+                string currentTimestamp = GetTimestamp(new DateTime());
+
+                //find most recent ID
+                GetUpdatedID();
+
+                //form insert SQL statement
+                string commandText = "INSERT INTO Messages(rowid, Sender, Recipient, Content, Timestamp) VALUES ('" + ((Int32)(localID + 1)).ToString() + "','" + messageObject[2] + "','" + messageObject[3] + "','" + messageObject[4] + "','" + messageObject[5] + "');";
+                SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
+                cmd.ExecuteNonQuery();
+                Console.WriteLine("Inserted Values To Message Table");
+                connection.Close();
+            } else
+            {
+                Console.WriteLine("[INFO] All messages up-to-date");
+            }
         }
     }
 }

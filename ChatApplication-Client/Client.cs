@@ -220,7 +220,7 @@ namespace ChatClient
             Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
             //Add messages to the local database and display in GUI
-            Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", ""));
+            Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", "").Replace("MESSAGES:", ""));
             serverResponseMessages = serverResponse;
             isConnected = true;
         }

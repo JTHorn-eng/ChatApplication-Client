@@ -26,7 +26,7 @@ namespace ChatClient
     public static class Client
     {
         // Chat username. Should probably be relocated to another class
-        public static string chatUsername = "bobby_jones";
+        public static string chatUsername;
         public static string chatRecipient = "alice_jones";
         public static string serverResponseMessages = "";
         public static string currentMessage = ""; 
@@ -49,8 +49,8 @@ namespace ChatClient
         // Initialises connection to server then keeps listening for data from server and sending messages entered into the GUI
         public static void Start()
         {
-            //Set username for messages displayed in the GUI
-            ClientShareData.SetUsername(chatUsername);
+            // Get username as entered in the GUI
+            chatUsername = ClientShareData.GetUsername();
 
             //Constantly attempt to connect to server recursively, with timeout
             AttemptConnection();
@@ -59,7 +59,9 @@ namespace ChatClient
             //with no errors, then procede with client processes
             if (isConnected || !nonSocketException)
             {
+                // Signal to the MainWindow thread that we're connected and messages have been updated so it can get the list of senders ("friends") to display in the GUI
                 initialised = true;
+
                 Console.WriteLine("[INFO] Running client processes");
                 RunClientProcesses();
             }
@@ -112,32 +114,53 @@ namespace ChatClient
         //Run any client methods when connected to server
         private static void RunClientProcesses()
         {
-            // Every 100 milliseconds, perform client processes
-            while (true)
+            while(true)
             {
-                //If person has clicked send in the GUI, send the message.
-                if (ClientShareData.GetSendButtonClicked())
+                StateObject state = new StateObject();
+                state.workSocket = client;
+
+                // Set up a callback for when the client begins sending data
+                client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
+
+                receiveDone.Reset();
+
+                bool dataReceived = false;
+
+                // Every 100 milliseconds, perform client processes
+                while (!dataReceived)
                 {
-                    //handle all messages in the queue.
-                    foreach (string message in ClientShareData.GetMessageQueue()) {
-
-                        
-                        //messages are read if they are not empty
-                        if (!message.Equals(""))
-                        {
-                            Console.WriteLine("New Message: " + message);
-                            Send(client, "MESSAGES:jane;" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
-
-                        }
-                    }
-                    for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                    //If person has clicked send in the GUI, send the message.
+                    if (ClientShareData.GetSendButtonClicked())
                     {
-                        string messageRead = ClientShareData.ReadClientMessage();
+                        //handle all messages in the queue.
+                        foreach (string message in ClientShareData.GetMessageQueue())
+                        {
+
+
+                            //messages are read if they are not empty
+                            if (!message.Equals(""))
+                            {
+                                Console.WriteLine("New Message: " + message);
+                                Send(client, "MESSAGES:" + chatRecipient + ";" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
+
+                            }
+                        }
+                        for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                        {
+                            string messageRead = ClientShareData.ReadClientMessage();
+                        }
+                        ClientShareData.SetSendButtonClicked(false);
                     }
-                    ClientShareData.SetSendButtonClicked(false);
+
+                    // Check whether we've received data from the client (but do not wait)
+                    dataReceived = receiveDone.WaitOne(0);
                 }
 
+                Database.UpdateMessageTable(state.sb.ToString().Replace("MESSAGES:","").Replace("<EOF>",""));
 
+                // Reset the buffer so we can receive more data from it
+                state.sb = new StringBuilder();
+                state.buffer = new byte[StateObject.BufferSize];
             }
         }
 
@@ -191,7 +214,7 @@ namespace ChatClient
             Console.WriteLine("[INFO] Sending username to the server");
 
             // Send our chat username to the server
-            Send(client, String.Format("IDENTIFICATION: {0}<EOF>", chatUsername));
+            Send(client, String.Format("IDENTIFICATION:{0}<EOF>", chatUsername));
 
             Console.WriteLine("[INFO] Receiving response from server");
 
@@ -220,15 +243,11 @@ namespace ChatClient
                 serverResponse = Receive(client);
             }
 
-
-
-
-
             // We've got messages from the server
             Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
             //Add messages to the local database and display in GUI
-            Database.UpdateMessageTable(chatUsername, serverResponse.Replace("<EOF>", "").Replace("MESSAGES:", ""));
+            Database.UpdateMessageTable(serverResponse.Replace("<EOF>", "").Replace("MESSAGES:", ""));
             serverResponseMessages = serverResponse;
             isConnected = true;
         }

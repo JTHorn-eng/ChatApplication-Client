@@ -1,60 +1,45 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
-using System.Windows.Documents;
 
 namespace ChatClient
 {
+
+    // Handles all I/O with the local database, which stores messages
     public static class Database
     {
+        // Location on disk of the database
+        public static string MessagesDBLocation = @"URI=file:C:\ChatAppClient\messages.db";
 
-        private const string MessagesDBLocation = @"URI=file:C:\ChatAppClient\messages.db";
-        private static Int32 localID = 0; //stores the most recent id for a message in the Messages table
-
-        //Retrieve the most recent ID value from the Messages table
-        private static void GetUpdatedID()
+        //Add a message from the server to the local DB
+        public static void UpdateMessageTable(string serverMessageString)
         {
-            SQLiteConnection connection = new SQLiteConnection(MessagesDBLocation);
-            connection.Open();
-            string commandText = "SELECT rowid FROM Messages WHERE rowid = (SELECT MAX(rowid) FROM Messages) ";
-            SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
-            SQLiteDataReader r = cmd.ExecuteReader();
-            if (r.Read())
-                localID = (Int32)r.GetInt64(0);
-            connection.Close();
-        }
+            // Split the response from the server into an array containing the sender, content and timestamp
+            string[] messageObject = serverMessageString.Split(';');
 
-        //Get current timestamp for message objects
-        public static String GetTimestamp(this DateTime value)
-        {
-            return value.ToString("yyyyMMddHHmmssfff");
-        }
-
-        //Add messages from the server to the client's Messages table
-        public static void UpdateMessageTable(string sender, string serverResponse)
-        {
-            string[] messageObject = serverResponse.Split(':');
+            // Set up the connection
             SQLiteConnection connection = new SQLiteConnection(MessagesDBLocation);
             connection.Open();
 
-            if (!serverResponse.Equals(""))
+            if (!serverMessageString.Equals(""))
             {
+                // Set up the insert command
+                string commandText = "INSERT INTO Messages(Sender, Recipient, Content, Timestamp) VALUES (@sender, @recipient,@content,@timestamp);";
+                SQLiteCommand insertCommand = new SQLiteCommand(commandText, connection);
 
-                //retrieve timestamp
-                string currentTimestamp = GetTimestamp(new DateTime());
+                // Add the sender, recipient, content and timestamp values into the command
+                insertCommand.Parameters.AddWithValue("@sender", messageObject[0]);
+                insertCommand.Parameters.AddWithValue("@recipient", ClientShareData.GetUsername());
+                insertCommand.Parameters.AddWithValue("@content", messageObject[1]);
+                insertCommand.Parameters.AddWithValue("@timestamp", messageObject[2]);
 
-                //find most recent ID
-                GetUpdatedID();
-
-                //form insert SQL statement
-                string commandText = "INSERT INTO Messages(rowid, Sender, Recipient, Content, Timestamp) VALUES ('" + ((Int32)(localID + 1)).ToString() + "','" + messageObject[2] + "','" + messageObject[3] + "','" + messageObject[4] + "','" + messageObject[5] + "');";
-                SQLiteCommand cmd = new SQLiteCommand(commandText, connection);
-                cmd.ExecuteNonQuery();
-                Console.WriteLine("Inserted Values To Message Table");
+                // Execute the command and close up
+                insertCommand.ExecuteNonQuery();
+                Console.WriteLine("[INFO] Message added to the database");
                 connection.Close();
             } else
             {
-                Console.WriteLine("[INFO] All messages up-to-date");
+                Console.WriteLine("[INFO] No message to add to the database");
             }
         }
 
@@ -65,21 +50,24 @@ namespace ChatClient
             // List to store usernames of everyone the user has chatted with
             List<String> friends = new List<String>();
 
-            // Set up the connection and query
+            // Set up the connection
             SQLiteConnection connection = new SQLiteConnection(MessagesDBLocation);
             connection.Open();
-            string commandText = "SELECT Sender FROM Messages WHERE Recipient='" + ClientShareData.GetUsername() + "';";
-            SQLiteCommand select = new SQLiteCommand(commandText, connection);
+
+            // Set up the query and add the recipient value
+            string commandText = "SELECT Sender FROM Messages WHERE Recipient=@recipient;";
+            SQLiteCommand selectQuery = new SQLiteCommand(commandText, connection);
+            selectQuery.Parameters.AddWithValue("@recipient", ClientShareData.GetUsername());
 
             // Set up the reader we can use to pull sender names attached to message records in turn
-            SQLiteDataReader rdr = select.ExecuteReader();
+            SQLiteDataReader reader = selectQuery.ExecuteReader();
 
-            if (rdr.HasRows)
+            if (reader.HasRows)
             {
                 // Continually read sender names from the database and add new ones to the friends List
-                while (rdr.Read())
+                while (reader.Read())
                 {
-                    string sender = rdr.GetString(0);
+                    string sender = reader.GetString(0);
                     if (!friends.Contains(sender))
                     {
                         friends.Add(sender);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Server;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows;
@@ -24,17 +25,6 @@ namespace ChatClient
         public MainWindow()
         {
             InitializeComponent();
-            clientApp = new ClientApplication();
-            while(applicationRunning)
-            {
-                if(Client.initialised)
-                {
-                    UpdateUsersSidebar(Database.GetFriendsList());
-                    break;
-                }
-
-                Thread.Sleep(200);
-            }
         }
 
 
@@ -49,7 +39,7 @@ namespace ChatClient
         }
 
         //TODO: Format server response messages.
-        public void updateTextBoxMessagesFromServer(string serverResponse)
+        public void UpdateTextBoxMessagesFromServer(string serverResponse)
         {
             ClientShareData.AddClientMessage(Send_Textbox.Text);
             Send_Textbox.Text = serverResponse;
@@ -99,5 +89,33 @@ namespace ChatClient
             }
         }
 
+        // On "set username" button click, we set the username and start the application
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            clientApp = new ClientApplication();
+            ClientShareData.SetUsername(UsernameTextBox.Text);
+            while (applicationRunning)
+            {
+                if (Client.initialised)
+                {
+                    UpdateUsersSidebar(Database.GetFriendsList());
+                    break;
+                }
+
+                Thread.Sleep(200);
+            }
+        }
+
+        // On "set DB path" button click, we set the local database path
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            Database.MessagesDBLocation = @"URI=file:" + DBPathTextBox.Text;
+        }
+
+        // On recipient button click, we set the recipient in the Client class
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            Client.chatRecipient = RecipientTextBox.Text;
+        }
     }
 }

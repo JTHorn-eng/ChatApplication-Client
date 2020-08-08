@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using System.Windows;
+using System.Linq;
 
 namespace ChatClient
 {
@@ -119,10 +120,20 @@ namespace ChatClient
                 StateObject state = new StateObject();
                 state.workSocket = client;
 
-                // Set up a callback for when the client begins sending data
+                // Set up a callback for when the client receives data from the server
                 client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
 
                 receiveDone.Reset();
+               
+                //Check if recipient name has changed
+                if (!(chatRecipient.Equals(ClientShareData.getGUIRecipient())))
+                {
+                    chatRecipient = ClientShareData.getGUIRecipient();
+                }
+
+                //TODO reload client-to-client messages from server and local database
+                //TODO style message objects
+
 
                 bool dataReceived = false;
 
@@ -135,16 +146,13 @@ namespace ChatClient
                         //handle all messages in the queue.
                         foreach (string message in ClientShareData.GetMessageQueue())
                         {
-
-
-                            //messages are read if they are not empty
                             if (!message.Equals(""))
                             {
                                 Console.WriteLine("New Message: " + message);
-                                Send(client, "MESSAGES:" + chatRecipient + ";" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
-
+                                Send(client, "MESSAGES:" + chatRecipient + "|" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
                             }
                         }
+
                         for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
                         {
                             string messageRead = ClientShareData.ReadClientMessage();
@@ -154,9 +162,16 @@ namespace ChatClient
 
                     // Check whether we've received data from the client (but do not wait)
                     dataReceived = receiveDone.WaitOne(0);
+            
                 }
 
-                Database.UpdateMessageTable(state.sb.ToString().Replace("MESSAGES:","").Replace("<EOF>",""));
+                //Decrypt received message
+                string[] receivedMessage = state.sb.ToString().Split('|');
+                receivedMessage[2] = ClientSecurity.DecryptMessage(receivedMessage[2], chatUsername);
+
+
+                //Update local database table with received message
+                Database.UpdateMessageTable(string.Join("", receivedMessage));
 
                 // Reset the buffer so we can receive more data from it
                 state.sb = new StringBuilder();

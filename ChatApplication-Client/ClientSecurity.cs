@@ -112,7 +112,6 @@ namespace ChatClient
         public static string EncryptMessage(string plainText, string containerName)
         {
 
-            Console.WriteLine("ASDASDASD: " + plainText);
             return Encoding.UTF8.GetString(EncryptStringToBytes_Aes(plainText)) + "|"
                   + Encoding.UTF8.GetString(RSAEncryption(publicKey, GetPublicKeyInfo(containerName), false)) + "|"
                   + Encoding.UTF8.GetString(RSAEncryption(IV, GetPublicKeyInfo(containerName), false));

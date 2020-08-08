@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace ChatClient
@@ -33,7 +34,7 @@ namespace ChatClient
             currentMessage = Send_Textbox.Text;
             ClientShareData.AddClientMessage(currentMessage);
             ClientShareData.SetSendButtonClicked(true);
-            updateMessageArea(currentMessage);
+            UpdateMessageArea(currentMessage);
 
             Console.WriteLine(Send_Textbox.Text);
         }
@@ -46,9 +47,11 @@ namespace ChatClient
         }
 
         //append message to scrollviwer, resize viewer if needed
-        public void updateMessageArea(string serverResponse)
+        public void UpdateMessageArea(string serverResponse)
         {
             Label message = new Label();
+            Style st = FindResource("StyleA") as Style;
+            message.Style = st;
             message.Content = ClientShareData.GetUsername() + ": "+ serverResponse;
             Console.WriteLine("[INFO] Added new message");
             Message_Area.Children.Add(message);
@@ -60,6 +63,11 @@ namespace ChatClient
             applicationRunning = false;
             clientApp.Close();
         }
+
+ 
+
+
+
 
         // Accepts a list of usernames and adds a clickable TextBlock in a Border to the users sidebar of the GUI for each username
         public void UpdateUsersSidebar(List<String> users)
@@ -76,9 +84,14 @@ namespace ChatClient
                 border.BorderThickness = new Thickness(0, 0, 0, 1);
                 border.BorderBrush = Brushes.DarkGray;
 
-                TextBlock text = new TextBlock();
+                Button text = new Button();
                 text.Padding = new Thickness(5, 5, 0, 0);
-                text.Text = user;
+                text.Content = user;
+                text.Click += (source, e) =>
+                {
+                    ClientShareData.setGUIRecipient(text.Content.ToString());
+                };
+                
 
                 border.Child = text;
                 UserListGrid.Children.Add(border);
@@ -116,6 +129,20 @@ namespace ChatClient
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             Client.chatRecipient = RecipientTextBox.Text;
+        }
+
+        //Send client message when Enter key is pressed
+        private void OnKeyDownHandler(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                currentMessage = Send_Textbox.Text;
+                ClientShareData.AddClientMessage(currentMessage);
+                ClientShareData.SetSendButtonClicked(true);
+                UpdateMessageArea(currentMessage);
+
+                Console.WriteLine(Send_Textbox.Text);
+            }
         }
     }
 }

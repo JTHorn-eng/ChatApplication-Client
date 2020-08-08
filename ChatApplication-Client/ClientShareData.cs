@@ -9,7 +9,11 @@ namespace ChatClient
         //queue for reading and writing messages between GUI thread and clientSocket thread
         public static Queue<string> messageQueue = new Queue<string>();
         private static string username = "";
+        private static string guiRecipient = "";
         private static bool sendButtonClicked = false;
+
+
+      
 
 
         public static Queue<String> GetMessageQueue()
@@ -19,6 +23,15 @@ namespace ChatClient
         public static bool GetSendButtonClicked()
         {
             return sendButtonClicked;
+        }
+
+        public static string getGUIRecipient()
+        {
+            return guiRecipient;
+        }
+
+        public static void setGUIRecipient(string name) {
+            guiRecipient = name;
         }
 
         public static void SetSendButtonClicked(bool a)

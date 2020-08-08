@@ -6,6 +6,16 @@
         
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
+    <Window.Resources>
+        <Style x:Key="StyleA">
+            <Setter Property="Control.FontSize" Value="18"/>
+            <Setter Property="Control.FontFamily" Value="Comic Sans MS"/>
+            <Setter Property="Control.Background" Value="Blue"/>
+            <Setter Property="Control.Foreground" Value="White"/>
+            
+
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="131*" >
@@ -103,7 +113,7 @@
                     </ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Name="Send_Textbox" />
-                <Button Grid.Column="1" Content="Send" Click="Send_Message"/>
+                <Button Grid.Column="1" Content="Send" Click="Send_Message" KeyDown="OnKeyDownHandler"/>
             </Grid>
         </Grid>
 

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Text;
 using System.Windows;
 using System.Linq;
+using ChatServer;
 
 namespace ChatClient
 {
@@ -50,6 +51,11 @@ namespace ChatClient
         // Initialises connection to server then keeps listening for data from server and sending messages entered into the GUI
         public static void Start()
         {
+
+            //Initialise security attributes, use chat username as keycontainer
+            //TODO: Change container name to something more secure
+            ClientSecurity.Init(chatUsername);
+
             // Get username as entered in the GUI
             chatUsername = ClientShareData.GetUsername();
 
@@ -132,7 +138,6 @@ namespace ChatClient
                 }
 
                 //TODO reload client-to-client messages from server and local database
-                //TODO style message objects
 
 
                 bool dataReceived = false;
@@ -149,7 +154,7 @@ namespace ChatClient
                             if (!message.Equals(""))
                             {
                                 Console.WriteLine("New Message: " + message);
-                                Send(client, "MESSAGES:" + chatRecipient + "|" + ClientSecurity.EncryptMessage(message, chatUsername) + "<EOF>");
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + Encoding.ASCII.GetString(ClientSecurity.Encrypt(message)) + "<EOT><EOF>");
                             }
                         }
 
@@ -164,10 +169,23 @@ namespace ChatClient
                     dataReceived = receiveDone.WaitOne(0);
             
                 }
+                //Split message into recipient and content
+                string receivedMessage = state.sb.ToString().Replace("MESSAGES:","");
+                string recipient = "";
+                string content = "";
+                for (int x = receivedMessage.IndexOf("<SOR>") + 4; x < receivedMessage.LastIndexOf("<EOR>") ; x++)
+                {
+                    recipient += receivedMessage[x];
+                }
+                for (int x = receivedMessage.IndexOf("<SOT>") + 4; x < receivedMessage.LastIndexOf("<EOT>"); x++)
+                {
+                    content += receivedMessage[x];
+                }
+
 
                 //Decrypt received message
-                string[] receivedMessage = state.sb.ToString().Split('|');
-                receivedMessage[2] = ClientSecurity.DecryptMessage(receivedMessage[2], chatUsername);
+
+                content = ClientSecurity.Decrypt(Encoding.ASCII.GetBytes(content));
 
 
                 //Update local database table with received message
@@ -226,6 +244,8 @@ namespace ChatClient
         // Sends the client's chat username, its public key (if needed) and receives new messages for the client
         private static void ChatHandshake(Socket client)
         {
+            
+
             Console.WriteLine("[INFO] Sending username to the server");
 
             // Send our chat username to the server
@@ -246,13 +266,9 @@ namespace ChatClient
                 Console.WriteLine("[INFO] Key pair generation request received");
                 Console.WriteLine("[INFO] Generating key pair and sending public key to server");
 
-                //Generate key pair with client username as container name
-                //If key pair already generated, nothing happens
-                ClientSecurity.GenKey(chatUsername);
-
+                //RSA public key already generated in Init method.
                 // Send the pub key to the server
-                Console.WriteLine(ClientSecurity.RetrievePublicKey(chatUsername));
-                Send(client, "PUBKEY:" + ClientSecurity.RetrievePublicKey(chatUsername) + " <EOF>");
+                Send(client, "PUBKEY:" + ClientSecurity.GetRSAPublicKey(chatUsername) + " <EOF>");
 
                 // Recieve messages from the server
                 serverResponse = Receive(client);

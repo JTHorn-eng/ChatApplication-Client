@@ -34,6 +34,7 @@ namespace ChatClient
         public static string currentMessage = ""; 
         public static bool isConnected = false;
         public static bool nonSocketException = false;
+        public static string recipientPubKey = "";
 
         // MREs for signalling when threads may proceed
         private static ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -72,7 +73,6 @@ namespace ChatClient
                 Console.WriteLine("[INFO] Running client processes");
                 RunClientProcesses();
             }
-            
         }
 
         //Attempt to connect to server
@@ -148,27 +148,37 @@ namespace ChatClient
                     //If person has clicked send in the GUI, send the message.
                     if (ClientShareData.GetSendButtonClicked())
                     {
-                        //handle all messages in the queue.
-                        foreach (string message in ClientShareData.GetMessageQueue())
-                        {
-                            if (!message.Equals(""))
-                            {
-                                Console.WriteLine("New Message: " + message);
-                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + Encoding.ASCII.GetString(ClientSecurity.Encrypt(message)) + "<EOT><EOF>");
-                            }
-                        }
+                        
 
-                        for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                        //If the recipient public key doesn't exist, encryption cannot take place
+                        if (!recipientPubKey.Equals("NO_PUB_KEY_FOUND"))
                         {
-                            string messageRead = ClientShareData.ReadClientMessage();
+                            //handle all messages in the queue.
+                            foreach (string message in ClientShareData.GetMessageQueue())
+                            {
+
+                                if (!message.Equals(""))
+                                {
+                                    Console.WriteLine("New Message: " + message);
+                                    Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + ClientSecurity.Encrypt(message, recipientPubKey) + "<EOT><EOF>");
+                                }
+                            }
+
+                            for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                            {
+                                string messageRead = ClientShareData.ReadClientMessage();
+                            }
+                            ClientShareData.SetSendButtonClicked(false);
                         }
-                        ClientShareData.SetSendButtonClicked(false);
                     }
 
                     // Check whether we've received data from the client (but do not wait)
                     dataReceived = receiveDone.WaitOne(0);
             
                 }
+
+                Console.WriteLine("NEW MESSAGE: " + state.sb.ToString());
+
                 //Split message into recipient and content
                 string receivedMessage = state.sb.ToString().Replace("MESSAGES:","");
                 string recipient = "";
@@ -184,8 +194,8 @@ namespace ChatClient
 
 
                 //Decrypt received message
-
-                content = ClientSecurity.Decrypt(Encoding.ASCII.GetBytes(content));
+                Console.WriteLine("CONTENT Length: " + content.Length);
+                content = ClientSecurity.Decrypt(content);
 
 
                 //Update local database table with received message
@@ -266,14 +276,9 @@ namespace ChatClient
                 Console.WriteLine("[INFO] Key pair generation request received");
                 Console.WriteLine("[INFO] Generating key pair and sending public key to server");
 
-                //RSA public key already generated in Init method.
-                // Send the pub key to the server
-                Send(client, "PUBKEY:" + ClientSecurity.GetRSAPublicKey(chatUsername) + " <EOF>");
-
                 // Recieve messages from the server
                 serverResponse = Receive(client);
             }
-
             // We've got messages from the server
             Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
@@ -281,6 +286,20 @@ namespace ChatClient
             Database.UpdateMessageTable(serverResponse.Replace("<EOF>", "").Replace("MESSAGES:", ""));
             serverResponseMessages = serverResponse;
             isConnected = true;
+
+            
+
+            //retrieve recipient RSA public key from server database
+            Send(client, chatRecipient + ":KEY_REQUEST<EOF>");
+
+            Console.WriteLine("[INFO] Attempting to retrieve recipient public key");
+
+            //Wait for recipient public key before sending anything
+            string serverResponseRecipient = Receive(client);
+            Console.WriteLine("RECIPIENT PUBLIC KEY: " + serverResponseRecipient);
+
+
+
         }
 
         //Get current server response messages

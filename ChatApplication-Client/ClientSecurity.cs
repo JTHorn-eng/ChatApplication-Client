@@ -1,3 +1,4 @@
+using ChatClient;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -14,32 +15,50 @@ namespace ChatServer
         static byte[] SymmetricIV;
         static byte[] generatedCipherText;
 
-        static RSAParameters RSAPublicKey;
+        static string RSAPublicKey; //XAML representation of client's public key
         static RSAParameters RSAPrivateKey;
 
-        public static byte[] Encrypt(string plaintext)
+        
+
+
+        public static string Encrypt(string plaintext, string publicKey)
         {
             generatedCipherText = AESEncrypt(plaintext);
-            EncryptPublicKeyAndIV();
-            return generatedCipherText;
+            EncryptPublicKeyAndIV(publicKey);
+            return "<A>" + Encoding.ASCII.GetString(generatedCipherText) + "<B>" + Encoding.ASCII.GetString(encryptedSymmetricKey) + "<C>" + Encoding.ASCII.GetString(encryptedSymmetricIV) + "<D>";
         }
-        public static string Decrypt(byte[] cipherText)
+        public static string Decrypt(string cipherText)
         {
-            DecryptPublicKeyAndIV(encryptedSymmetricKey, encryptedSymmetricIV);
-            return AESDecrypt(cipherText);
+            Console.WriteLine("Cipher text: " + cipherText);
+            byte[] encPubKey;
+            byte[] encIV;
+            string encPubKeyVerbatim = "";
+            string encIVVerbatim = "";
+            for (int x = cipherText.IndexOf("<B>") + "<B>".Length; x < cipherText.LastIndexOf("<C>"); x++)
+            {
+                encPubKeyVerbatim += cipherText[x];
+            }
+            for (int x = cipherText.IndexOf("<C>") + "<C>".Length; x < cipherText.LastIndexOf("<D>"); x++)
+            {
+                encIVVerbatim += cipherText[x];
+            }
+            
+            encPubKey = Encoding.ASCII.GetBytes(encPubKeyVerbatim);
+            encIV = Encoding.ASCII.GetBytes(encIVVerbatim);
+            Console.WriteLine("LEN OF PUB KEY: " + encPubKey.Length);
+            DecryptPublicKeyAndIV(encPubKey, encIV);
+            return AESDecrypt(Encoding.ASCII.GetBytes(cipherText));
         }
 
-        private static void EncryptPublicKeyAndIV()
+        private static void EncryptPublicKeyAndIV(string publicKey)
         {
 
             //Create a new instance of RSACryptoServiceProvider.
 
             RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
 
-
-            //Import key parameters into RSA
-            RSA.ImportParameters(RSAPublicKey);
-
+            RSA.FromXmlString(publicKey);
+          
             //Encrypt AES public key and IV
             encryptedSymmetricKey = RSA.Encrypt(SymmetricKey, false);
             encryptedSymmetricIV = RSA.Encrypt(SymmetricIV, false);
@@ -52,11 +71,13 @@ namespace ChatServer
             //Import key parameters into RSA
             RSA.ImportParameters(RSAPrivateKey);
 
+            Console.WriteLine("LEN OF PUB KEY RECEIVED: " + PublicKey.Length);
+
             SymmetricKey = RSA.Decrypt(PublicKey, false);
             SymmetricIV = RSA.Decrypt(IV, false);
         }
-
-        public static RSAParameters GetRSAPublicKey(string container)
+        
+        public static string GetRSAPublicKey(string container)
         {
             //Create crypto service provider parameters
             CspParameters p = new CspParameters();
@@ -65,8 +86,7 @@ namespace ChatServer
             RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(p);
             RSA.PersistKeyInCsp = false;
 
-
-            return RSA.ExportParameters(false);
+            return RSA.ToXmlString(false);
         }
 
         private static RSAParameters GetRSAPrivateKey(string container)
@@ -91,6 +111,11 @@ namespace ChatServer
             RSAPrivateKey = GetRSAPrivateKey(keyContainer);
             aes.GenerateKey();
             aes.GenerateIV();
+            Console.WriteLine("[INFO] RSAPublicKey : " + RSAPublicKey);
+            Console.WriteLine("[INFO] RSAPrivateKey : " + RSAPrivateKey);
+
+            Console.WriteLine("[INFO] aes key : " + aes.Key);
+            Console.WriteLine("[INFO] aes IV : " + aes.IV);
             SymmetricKey = aes.Key;
             SymmetricIV = aes.IV;
 
@@ -158,14 +183,7 @@ namespace ChatServer
 
             return plaintext;
         }
-        //FOR DEBUGGING ONLY
-        public static void Test(string containerName)
-        {
-            string message = "Hello Testing Testing 1 2 3";
-            Console.WriteLine(message);
-            Console.WriteLine(Encrypt(message));
-            Console.WriteLine(Decrypt(Encrypt(message)));
-        }
+       
 
     }
 }

@@ -32,6 +32,7 @@ namespace ChatClient
 
         public static void setGUIRecipient(string name) {
             guiRecipient = name;
+            Client.SetRecipient(guiRecipient);
         }
 
         public static void SetSendButtonClicked(bool a)

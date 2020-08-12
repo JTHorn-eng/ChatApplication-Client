@@ -3,9 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
-using System.Windows;
-using System.Linq;
-using ChatServer;
 
 namespace ChatClient
 {
@@ -31,15 +28,15 @@ namespace ChatClient
         public static string chatUsername;
         public static string chatRecipient = "alice_jones";
         public static string serverResponseMessages = "";
-        public static string currentMessage = ""; 
+        public static string currentMessage = "";
         public static bool isConnected = false;
         public static bool nonSocketException = false;
         public static string recipientPubKey = "";
 
         // MREs for signalling when threads may proceed
-        private static ManualResetEvent connectionDone = new ManualResetEvent(false);
-        private static ManualResetEvent receiveDone = new ManualResetEvent(false);
-        private static ManualResetEvent sendDone = new ManualResetEvent(false);
+        private static readonly ManualResetEvent connectionDone = new ManualResetEvent(false);
+        private static readonly ManualResetEvent receiveDone = new ManualResetEvent(false);
+        private static readonly ManualResetEvent sendDone = new ManualResetEvent(false);
 
         private const string ServerIP = "127.0.0.1";
         private const int ServerPort = 8182;
@@ -49,20 +46,23 @@ namespace ChatClient
 
         public static bool initialised = false;
 
+        private static bool recipientChanged = false;
+
+        private static EncryptionHandler encryptionHandler;
+
         // Initialises connection to server then keeps listening for data from server and sending messages entered into the GUI
         public static void Start()
         {
-
-            //Initialise security attributes, use chat username as keycontainer
-            //TODO: Change container name to something more secure
-            ClientSecurity.Init(chatUsername);
-
             // Get username as entered in the GUI
             chatUsername = ClientShareData.GetUsername();
 
+            //Initialise security attributes, use chat username as keycontainer
+            //TODO: Change container name to something more secure
+            encryptionHandler = new EncryptionHandler(chatUsername);
+
             //Constantly attempt to connect to server recursively, with timeout
             AttemptConnection();
-            
+
             //if the client is connected and the connection attempt hasn't returned a nonSocketException i.e. the program works
             //with no errors, then procede with client processes
             if (isConnected || !nonSocketException)
@@ -78,50 +78,50 @@ namespace ChatClient
         //Attempt to connect to server
         public static void AttemptConnection()
         {
-                try
-                {
-                    
-                    // Initialises endpoint (IP + port) to connect to
-                    IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
+            try
+            {
 
-                    // Create a TCP/IP socket
-                    client = new Socket(IPAddress.Parse(ServerIP).AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                // Initialises endpoint (IP + port) to connect to
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
 
-                    Console.WriteLine("[INFO] Connecting to server");
+                // Create a TCP/IP socket
+                client = new Socket(IPAddress.Parse(ServerIP).AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                    // Connect to the server
-                    client.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), client);
+                Console.WriteLine("[INFO] Connecting to server");
 
-                    // Wait until connection is made
-                    connectionDone.WaitOne();
+                // Connect to the server
+                client.BeginConnect(remoteEndPoint, new AsyncCallback(ConnectCallback), client);
 
-                    Console.WriteLine("[INFO] Connected to server");
+                // Wait until connection is made
+                connectionDone.WaitOne();
+
+                Console.WriteLine("[INFO] Connected to server");
 
                 // Perform handshake to get established with server
                 if (isConnected)
                 {
                     ChatHandshake(client);
-                } 
+                }
 
-                }
-                catch (SocketException e)
-                {
-                    Console.WriteLine(e.ToString());
-                    //timeout
-                    Thread.Sleep(3000);
-                    AttemptConnection();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                    nonSocketException = true;
-                }                
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e.ToString());
+                //timeout
+                Thread.Sleep(3000);
+                AttemptConnection();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                nonSocketException = true;
+            }
         }
 
         //Run any client methods when connected to server
         private static void RunClientProcesses()
         {
-            while(true)
+            while (true)
             {
                 StateObject state = new StateObject();
                 state.workSocket = client;
@@ -130,60 +130,75 @@ namespace ChatClient
                 client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
 
                 receiveDone.Reset();
-               
-                //Check if recipient name has changed
-                if (!(chatRecipient.Equals(ClientShareData.getGUIRecipient())))
-                {
-                    chatRecipient = ClientShareData.getGUIRecipient();
-                }
-
-                //TODO reload client-to-client messages from server and local database
-
 
                 bool dataReceived = false;
 
                 // Every 100 milliseconds, perform client processes
                 while (!dataReceived)
                 {
-                    //If person has clicked send in the GUI, send the message.
+                    // If person has clicked send in the GUI, send the message.
                     if (ClientShareData.GetSendButtonClicked())
                     {
-                        
-
-                        //If the recipient public key doesn't exist, encryption cannot take place
-                        if (!recipientPubKey.Equals("NO_PUB_KEY_FOUND"))
+                        // Check if the recipient has changed since we last sent a message
+                        if (recipientChanged)
                         {
-                            //handle all messages in the queue.
-                            foreach (string message in ClientShareData.GetMessageQueue())
-                            {
+                            recipientChanged = false;
 
-                                if (!message.Equals(""))
-                                {
-                                    Console.WriteLine("New Message: " + message);
-                                    Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + ClientSecurity.Encrypt(message, recipientPubKey) + "<EOT><EOF>");
-                                }
-                            }
+                            // Fetch this recipient's public key
+                            Send(client, "KEY_REQUEST:" + chatRecipient + "<EOF>");
 
-                            for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
-                            {
-                                string messageRead = ClientShareData.ReadClientMessage();
-                            }
-                            ClientShareData.SetSendButtonClicked(false);
+                            receiveDone.WaitOne();
+                            receiveDone.Reset();
+
+                            string serverResponseRecipient = state.sb.ToString();
+
+                            state.sb = new StringBuilder();
+                            state.buffer = new byte[StateObject.BufferSize];
+
+                            // Set up a callback for when the client receives data from the server
+                            client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReceiveCallback), state);
+
+                            Console.WriteLine("RECIPIENT PUBLIC KEY: " + serverResponseRecipient);
+
+                            recipientPubKey = serverResponseRecipient.Replace("<EOF>", "").Replace("REQUESTED_PUB_KEY:", "").Trim();
                         }
+
+                        if (recipientPubKey == "NO_PUB_KEY_FOUND")
+                        {
+                            // Change this. Warn the user or phone the Queen or something.
+                            throw (new Exception());
+                        }
+
+                        //handle all messages in the queue.
+                        foreach (string message in ClientShareData.GetMessageQueue())
+                        {
+
+                            if (!message.Equals(""))
+                            {
+                                Console.WriteLine("New Message: " + message);
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";5", chatRecipient, recipientPubKey) + "<EOT><EOF>");
+                            }
+                        }
+
+                        for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                        {
+                            string messageRead = ClientShareData.ReadClientMessage();
+                        }
+                        ClientShareData.SetSendButtonClicked(false);
+
                     }
 
                     // Check whether we've received data from the client (but do not wait)
                     dataReceived = receiveDone.WaitOne(0);
-            
                 }
 
                 Console.WriteLine("NEW MESSAGE: " + state.sb.ToString());
 
                 //Split message into recipient and content
-                string receivedMessage = state.sb.ToString().Replace("MESSAGES:","");
+                string receivedMessage = state.sb.ToString().Replace("MESSAGES:", "");
                 string recipient = "";
                 string content = "";
-                for (int x = receivedMessage.IndexOf("<SOR>") + 4; x < receivedMessage.LastIndexOf("<EOR>") ; x++)
+                for (int x = receivedMessage.IndexOf("<SOR>") + 4; x < receivedMessage.LastIndexOf("<EOR>"); x++)
                 {
                     recipient += receivedMessage[x];
                 }
@@ -192,14 +207,13 @@ namespace ChatClient
                     content += receivedMessage[x];
                 }
 
-
                 //Decrypt received message
                 Console.WriteLine("CONTENT Length: " + content.Length);
-                content = ClientSecurity.Decrypt(content);
+                content = encryptionHandler.DecryptString(content);
 
 
                 //Update local database table with received message
-                Database.UpdateMessageTable(string.Join("", receivedMessage));
+                Database.UpdateMessageTable(content);
 
                 // Reset the buffer so we can receive more data from it
                 state.sb = new StringBuilder();
@@ -216,11 +230,12 @@ namespace ChatClient
                 client.Close();
                 //Force close all running threads
                 Environment.Exit(Environment.ExitCode);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine("Error when closing: " + e.Message);
                 //Force close all running threads
-                Environment.Exit(Environment.ExitCode); 
+                Environment.Exit(Environment.ExitCode);
             }
         }
 
@@ -254,7 +269,7 @@ namespace ChatClient
         // Sends the client's chat username, its public key (if needed) and receives new messages for the client
         private static void ChatHandshake(Socket client)
         {
-            
+
 
             Console.WriteLine("[INFO] Sending username to the server");
 
@@ -276,30 +291,32 @@ namespace ChatClient
                 Console.WriteLine("[INFO] Key pair generation request received");
                 Console.WriteLine("[INFO] Generating key pair and sending public key to server");
 
+                //Generate key pair with client username as container name
+                //If key pair already generated, nothing happens
+
+                // Send the pub key to the server
+                Send(client, "PUBKEY:" + encryptionHandler.GetRSAPublicKey() + " <EOF>");
+
                 // Recieve messages from the server
                 serverResponse = Receive(client);
             }
             // We've got messages from the server
             Console.WriteLine("[INFO] Messages downloaded from server: " + serverResponse);
 
+            // Get the encrypted text portion of the response
+            string encryptedText = serverResponse.Split(new string[] { "<SOT>" }, StringSplitOptions.None)[1].Split(new string[] { "<EOT>" }, StringSplitOptions.None)[0];
+
+            string decryptedText = "";
+
+            if(encryptedText != "")
+            {
+                decryptedText = encryptionHandler.DecryptString(encryptedText);
+            }
+            
             //Add messages to the local database and display in GUI
-            Database.UpdateMessageTable(serverResponse.Replace("<EOF>", "").Replace("MESSAGES:", ""));
+            Database.UpdateMessageTable(decryptedText);
             serverResponseMessages = serverResponse;
             isConnected = true;
-
-            
-
-            //retrieve recipient RSA public key from server database
-            Send(client, chatRecipient + ":KEY_REQUEST<EOF>");
-
-            Console.WriteLine("[INFO] Attempting to retrieve recipient public key");
-
-            //Wait for recipient public key before sending anything
-            string serverResponseRecipient = Receive(client);
-            Console.WriteLine("RECIPIENT PUBLIC KEY: " + serverResponseRecipient);
-
-
-
         }
 
         //Get current server response messages
@@ -411,6 +428,14 @@ namespace ChatClient
 
             // We've sent the data so let the parent thread proceed
             sendDone.Set();
+        }
+
+        // Signals 
+        public static void SetRecipient(string recipient)
+        {
+            chatRecipient = recipient;
+
+            recipientChanged = true;
         }
     }
 }

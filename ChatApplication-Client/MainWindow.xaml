@@ -5,16 +5,38 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
-    <Window.Resources>
-        <Style x:Key="StyleA">
-            <Setter Property="Control.FontSize" Value="18"/>
-            <Setter Property="Control.FontFamily" Value="Comic Sans MS"/>
-            <Setter Property="Control.Background" Value="Blue"/>
-            <Setter Property="Control.Foreground" Value="White"/>
-            
+        Title="ChatApp" Height="600" Width="1000" Closing="Window_Closing" Background="#FF8AC0FF"
+        >
 
+    <Window.Resources>
+        <Style TargetType="ScrollViewer" x:Key="ScrollbarStyle">
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
+
+
+
+        <Style TargetType ="Label" x:Key="StyleA">
+            <Setter Property="Control.FontSize" Value="14"/>
+            <Setter Property="Control.FontFamily" Value="Arial"/>
+            <Setter Property="Control.Background" Value="Blue"/>
+            <Setter Property="Height" Value="Auto"/>
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0.5, 0" EndPoint="0.5, 1">
+                        <LinearGradientBrush.GradientStops>
+                            <GradientStop Offset="0.0" Color="#90DDDD"/>
+                            <GradientStop Offset="1.0" Color="#5BFFFF"/>
+                        </LinearGradientBrush.GradientStops>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -36,7 +58,7 @@
 
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" BorderThickness="0,0,1,0" BorderBrush="DarkGray">
+            <Border Grid.Row="0" BorderBrush="#FF8AC0FF" BorderThickness="5,5" Grid.ColumnSpan="3"  CornerRadius="5" Padding="5,5,5,5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
@@ -76,9 +98,9 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="0,1,0,0">
-                <ScrollViewer>
-                    <Grid x:Name="UserListGrid">
+            <Border Grid.Row="1" BorderBrush="#FF8AC0FF" BorderThickness="5,5" Grid.ColumnSpan="3"  CornerRadius="5" Padding="5,3,0,3">
+                <ScrollViewer Margin="-4,2,-4,-2" Foreground="White" OpacityMask="Black" Background="White">
+                    <Grid x:Name="UserListGrid" Background="#FFB3D0F1">
 
                     </Grid>
 
@@ -96,27 +118,30 @@
                 </RowDefinition>
 
             </Grid.RowDefinitions>
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" Grid.Row="0">
-                <StackPanel HorizontalAlignment="Left" Height="332" VerticalAlignment="Top" Width="530" Name="Message_Area">
-                    
-                </StackPanel>
-            </ScrollViewer>
-            
+            <Border BorderBrush="#ADBAD1E2" BorderThickness="7,7" Grid.ColumnSpan="3" Padding="0,0,0,0">
+                <ScrollViewer Style="{StaticResource ScrollbarStyle}" VerticalScrollBarVisibility="Auto" Grid.Row="0" Background="White">
+                    <StackPanel HorizontalAlignment="Left" Height="332" VerticalAlignment="Top" Width="530" Name="Message_Area">
+
+                    </StackPanel>
+
+                </ScrollViewer>
+            </Border>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="381*">
+                    <ColumnDefinition Width="238*">
 
                     </ColumnDefinition>
-                    <ColumnDefinition Width="149*">
+                    <ColumnDefinition Width="19*">
 
                     </ColumnDefinition>
+                    <ColumnDefinition Width="75*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Name="Send_Textbox" />
-                <Button Grid.Column="1" Content="Send" Click="Send_Message" KeyDown="OnKeyDownHandler"/>
+                    <TextBox Grid.Column="0" AcceptsReturn="True" TextWrapping="Wrap" Name="Send_Textbox" Grid.ColumnSpan="3" Text="Type messages here" SpellCheck.IsEnabled="True" Background="White" SelectionOpacity="6" Margin="0,0,-8,0" />
+                <Button Grid.Column="2" Click="Send_Message" KeyDown="OnKeyDownHandler" Margin="46,0,0,0">
+                    <Image Source="C:\ChatAppClient\images\SendButton.png" Width="104" Height="50" Stretch="Fill"/>
+                </Button>
             </Grid>
         </Grid>
-
-
     </Grid>
 </Window>

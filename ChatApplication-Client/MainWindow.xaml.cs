@@ -50,6 +50,8 @@ namespace ChatClient
         public void UpdateMessageArea(string serverResponse)
         {
             Label message = new Label();
+           
+
             Style st = FindResource("StyleA") as Style;
             message.Style = st;
             message.Content = ClientShareData.GetUsername() + ": "+ serverResponse;

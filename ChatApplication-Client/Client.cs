@@ -54,6 +54,8 @@ namespace ChatClient
         {
 
             //Initialise security attributes, use chat username as keycontainer
+            //Generates RSA public key for connected client
+
             //TODO: Change container name to something more secure
             ClientSecurity.Init(chatUsername);
 

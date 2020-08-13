@@ -130,7 +130,7 @@ namespace ChatClient
         // On recipient button click, we set the recipient in the Client class
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            Client.chatRecipient = RecipientTextBox.Text;
+            ClientShareData.setGUIRecipient(RecipientTextBox.Text);
         }
 
         //Send client message when Enter key is pressed

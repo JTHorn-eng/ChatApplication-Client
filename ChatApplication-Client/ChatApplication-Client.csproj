@@ -70,7 +70,7 @@
     </Compile>
     <Compile Include="Client.cs" />
     <Compile Include="ClientApplication.cs" />
-    <Compile Include="ClientSecurity.cs" />
+    <Compile Include="EncryptionHandler.cs" />
     <Compile Include="ClientShareData.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="MainWindow.xaml.cs">

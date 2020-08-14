@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.RightsManagement;
 
 namespace ChatClient
@@ -65,6 +66,12 @@ namespace ChatClient
             {
                 return "";
             }
+        }
+
+        public static string GetTimestamp()
+        {
+            DateTime utcTime = DateTime.UtcNow;
+            return utcTime.ToString("HH-mm-ss-dd-MM-yyyy");
         }
     }
 }

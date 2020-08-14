@@ -178,7 +178,7 @@ namespace ChatClient
                             if (!message.Equals(""))
                             {
                                 Console.WriteLine("New Message: " + message);
-                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";5", chatRecipient, recipientPubKey) + "<EOT><EOF>");
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";" + ClientShareData.GetTimestamp(), chatRecipient, recipientPubKey) + "<EOT><EOF>");
                             }
                         }
 

@@ -34,7 +34,7 @@ namespace ChatClient
             currentMessage = Send_Textbox.Text;
             ClientShareData.AddClientMessage(currentMessage);
             ClientShareData.SetSendButtonClicked(true);
-            UpdateMessageArea(currentMessage);
+            AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
 
             Console.WriteLine(Send_Textbox.Text);
         }
@@ -47,17 +47,16 @@ namespace ChatClient
         }
 
         //append message to scrollviwer, resize viewer if needed
-        public void UpdateMessageArea(string serverResponse)
+        public void AddMessageToGUI(string username, string messageText)
         {
             Label message = new Label();
            
 
             Style st = FindResource("StyleA") as Style;
             message.Style = st;
-            message.Content = ClientShareData.GetUsername() + ": "+ serverResponse;
-            Console.WriteLine("[INFO] Added new message");
+            message.Content = username + ": "+ messageText;
+            Console.WriteLine("[INFO] Added new message to GUI");
             Message_Area.Children.Add(message);
-           
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -141,7 +140,7 @@ namespace ChatClient
                 currentMessage = Send_Textbox.Text;
                 ClientShareData.AddClientMessage(currentMessage);
                 ClientShareData.SetSendButtonClicked(true);
-                UpdateMessageArea(currentMessage);
+                AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
 
                 Console.WriteLine(Send_Textbox.Text);
             }

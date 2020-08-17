@@ -191,7 +191,7 @@ namespace ChatClient
                                 string timestamp = ClientShareData.GetTimestamp();
 
                                 string addMessage = chatUsername + ";" + message + ";" + timestamp;
-                                Database.UpdateMessageTable(addMessage);
+                                Database.UpdateMessageTable(chatRecipient, addMessage);
 
                                 //Send messages to recipient
                                 Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
@@ -231,7 +231,7 @@ namespace ChatClient
 
 
                 //Update local database table with received message
-                Database.UpdateMessageTable(content);
+                Database.UpdateMessageTable(ClientShareData.GetUsername(), content);
 
                 // Signal to the GUI that we have received a new message that needs displaying to the user
                 Client.receivedMessage = content;
@@ -341,7 +341,7 @@ namespace ChatClient
             }
             
             //Add messages to the local database and display in GUI
-            Database.UpdateMessageTable(decryptedText);
+            Database.UpdateMessageTable(ClientShareData.GetUsername(), decryptedText);
 
             if (encryptedText != "")
             {

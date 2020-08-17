@@ -12,7 +12,7 @@ namespace ChatClient
         public static string MessagesDBLocation = @"URI=file:C:\ChatAppClient\messages.db";
 
         //Add a message from the server to the local DB
-        public static void UpdateMessageTable(string serverMessageString)
+        public static void UpdateMessageTable(string recepient, string serverMessageString)
         {
             // Split the response from the server into an array containing the sender, content and timestamp
             string[] messageObject = serverMessageString.Split(';');
@@ -29,7 +29,7 @@ namespace ChatClient
 
                 // Add the sender, recipient, content and timestamp values into the command
                 insertCommand.Parameters.AddWithValue("@sender", messageObject[0]);
-                insertCommand.Parameters.AddWithValue("@recipient", ClientShareData.GetUsername());
+                insertCommand.Parameters.AddWithValue("@recipient", recepient);
                 insertCommand.Parameters.AddWithValue("@content", messageObject[1]);
                 insertCommand.Parameters.AddWithValue("@timestamp", messageObject[2]);
 

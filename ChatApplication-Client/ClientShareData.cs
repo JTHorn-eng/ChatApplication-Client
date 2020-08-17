@@ -8,30 +8,27 @@ namespace ChatClient
     public static class ClientShareData
     {
         //queue for reading and writing messages between GUI thread and clientSocket thread
-        public static Queue<string> messageQueue = new Queue<string>();
+        public static Queue<string> MessageQueue = new Queue<string>();
         private static string username = "";
         private static string guiRecipient = "";
         private static bool sendButtonClicked = false;
-
-        public static bool messageReceived = false;
+        public static bool MessageReceived = false;
       
-
-
         public static Queue<String> GetMessageQueue()
         {
-            return messageQueue;
+            return MessageQueue;
         }
         public static bool GetSendButtonClicked()
         {
             return sendButtonClicked;
         }
 
-        public static string getGUIRecipient()
+        public static string GetGUIRecipient()
         {
             return guiRecipient;
         }
 
-        public static void setGUIRecipient(string name) {
+        public static void SetGUIRecipient(string name) {
             guiRecipient = name;
             Client.SetRecipient(guiRecipient);
         }
@@ -43,7 +40,7 @@ namespace ChatClient
 
         public static void AddClientMessage(string m)
         {
-            messageQueue.Enqueue(m);
+            MessageQueue.Enqueue(m);
         }
 
         public static string GetUsername()
@@ -58,14 +55,7 @@ namespace ChatClient
 
         public static string ReadClientMessage()
         {
-            if (messageQueue.Count > 0)
-            {
-                return messageQueue.Dequeue() + "<EOF>";
-            }
-            else
-            {
-                return "";
-            }
+            return (MessageQueue.Count > 0) ? MessageQueue.Dequeue() + "<EOF>" : "";
         }
 
         public static string GetTimestamp()

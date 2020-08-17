@@ -27,16 +27,15 @@ namespace ChatClient
 
     // Functions as an async socket client
     // Use with Client.Start()
+
+    //TODO Fix GUI from freezing when closing and not connected to server
     public static class Client
     {
-        // Chat username. Should probably be relocated to another class
-        public static string chatUsername;
-        public static string chatRecipient = "alice_jones";
-        public static string serverResponseMessages = "";
-        public static string currentMessage = "";
-        public static bool isConnected = false;
-        public static bool nonSocketException = false;
-        public static string recipientPubKey = "";
+        private static string chatRecipient = "alice_jones";
+        private static string serverResponseMessages = "";
+        private static bool isConnected = false;
+        private static bool nonSocketException = false;
+        private static string recipientPubKey = "";
 
         // MREs for signalling when threads may proceed
         private static readonly ManualResetEvent connectionDone = new ManualResetEvent(false);
@@ -49,12 +48,10 @@ namespace ChatClient
         // Socket to connect to the server
         private static Socket client;
 
-        public static bool initialised = false;
-
-        public static string receivedMessage = "";
-
-        public static TaskFactory taskFactory;
-
+        //Connection information
+        public static bool Initialised = false;
+        private static string receivedMessage = "";
+        public static TaskFactory TaskFactoryGUI;
         private static bool recipientChanged = false;
 
         private static EncryptionHandler encryptionHandler;
@@ -62,14 +59,11 @@ namespace ChatClient
         // Initialises connection to server then keeps listening for data from server and sending messages entered into the GUI
         public static void Start()
         {
-            // Get username as entered in the GUI
-            chatUsername = ClientShareData.GetUsername();
-
             //Initialise security attributes, use chat username as keycontainer
             //Generates RSA public key for connected client
 
             //TODO: Change container name to something more secure
-            encryptionHandler = new EncryptionHandler(chatUsername);
+            encryptionHandler = new EncryptionHandler(ClientShareData.GetUsername());
 
             //Constantly attempt to connect to server recursively, with timeout
             AttemptConnection();
@@ -79,19 +73,18 @@ namespace ChatClient
             if (isConnected || !nonSocketException)
             {
                 // Signal to the MainWindow thread that we're connected and messages have been updated so it can get the list of senders ("friends") to display in the GUI
-                initialised = true;
+                Initialised = true;
 
                 Console.WriteLine("[INFO] Running client processes");
                 RunClientProcesses();
             }
         }
 
-        //Attempt to connect to server
+        //Attempt to connect to server listener socket
         public static void AttemptConnection()
         {
             try
             {
-
                 // Initialises endpoint (IP + port) to connect to
                 IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Parse(ServerIP), ServerPort);
 
@@ -188,15 +181,15 @@ namespace ChatClient
                             {
                                 Console.WriteLine("New Message: " + message);
                                 //Add sent messages to local database
-
+                                 
                                 //get timestamp for both updating local messages DB and sending message to recipient
                                 string timestamp = ClientShareData.GetTimestamp();
 
-                                string addMessage = chatUsername + ";" + message + ";" + timestamp;
+                                string addMessage = ClientShareData.GetUsername() + ";" + message + ";" + timestamp;
                                 Database.UpdateMessageTable(chatRecipient, addMessage);
 
                                 //Send messages to recipient
-                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(ClientShareData.GetUsername() + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
                             }
                         }
 
@@ -205,7 +198,6 @@ namespace ChatClient
                             string messageRead = ClientShareData.ReadClientMessage();
                         }
                         ClientShareData.SetSendButtonClicked(false);
-
                     }
 
                     // Check whether we've received data from the client (but do not wait)
@@ -238,9 +230,10 @@ namespace ChatClient
                 // Signal to the GUI that we have received a new message that needs displaying to the user
                 Client.receivedMessage = content;
 
-                if(!MainWindow.recipientsInGUI.Contains(content.Split(';')[0]))
+                //Add recipient to GUI if they haven't already
+                if(!MainWindow.RecipientsInGUI.Contains(content.Split(';')[0]))
                 {
-                    taskFactory.StartNew(() =>
+                    TaskFactoryGUI.StartNew(() =>
                     {
                         List<string> list = new List<string>();
                         list.Add(content.Split(';')[0]);
@@ -248,9 +241,10 @@ namespace ChatClient
                     });
                 }
 
+                //Add a received message to the GUI
                 if (content.Split(';')[0] == Client.chatRecipient)
                 {
-                    taskFactory.StartNew(() =>
+                    TaskFactoryGUI.StartNew(() =>
                     {
                         string[] splitMessage = Client.receivedMessage.Split(';');
                         ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
@@ -312,12 +306,10 @@ namespace ChatClient
         // Sends the client's chat username, its public key (if needed) and receives new messages for the client
         private static void ChatHandshake(Socket client)
         {
-
-
             Console.WriteLine("[INFO] Sending username to the server");
 
             // Send our chat username to the server
-            Send(client, String.Format("IDENTIFICATION:{0}<EOF>", chatUsername));
+            Send(client, String.Format("IDENTIFICATION:{0}<EOF>", ClientShareData.GetUsername()));
 
             Console.WriteLine("[INFO] Receiving response from server");
 
@@ -364,7 +356,7 @@ namespace ChatClient
 
                 // Signal to the GUI that we have received a new message that needs displaying to the user
                 Client.receivedMessage = decryptedText;
-                taskFactory.StartNew(() =>
+                TaskFactoryGUI.StartNew(() =>
                 {
                     string[] splitMessage = Client.receivedMessage.Split(';');
                     ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
@@ -486,12 +478,9 @@ namespace ChatClient
             // We've sent the data so let the parent thread proceed
             sendDone.Set();
         }
-
-        // Signals 
         public static void SetRecipient(string recipient)
         {
             chatRecipient = recipient;
-
             recipientChanged = true;
         }
     }

@@ -11,7 +11,7 @@ namespace ChatClient
     public class EncryptionHandler
     {
         // Indicates whether key containers (and associated RSA keys) persist
-        private const bool PersistRSAKeys = true;
+        private const bool persistRSAKeys = true;
 
         // Dictionary of the symmetric keys for each username for this session
         private readonly Dictionary<string, byte[]> aesKeyDict = new Dictionary<string, byte[]>();
@@ -38,8 +38,9 @@ namespace ChatClient
             rsaPublicKey = GetRSAPublicKey();
             rsaParameters = GetRSAParameters();
 
-            Console.WriteLine("[INFO] RSA public key is: " + rsaPublicKey);
-            Console.WriteLine("[INFO] RSA private key is: " + rsaParameters);
+            //DEBUG INFO ONLY
+            //Console.WriteLine("[INFO] RSA public key is: " + rsaPublicKey);
+            //Console.WriteLine("[INFO] RSA private key is: " + rsaParameters);
         }
 
         // Retrieve the RSA public key (as an XML string) for the given chat username from the local PC key container
@@ -57,7 +58,7 @@ namespace ChatClient
             RSACryptoServiceProvider rsaCSP = new RSACryptoServiceProvider(cspParams);
 
             // Set persistence of the container according to the class default
-            rsaCSP.PersistKeyInCsp = PersistRSAKeys;
+            rsaCSP.PersistKeyInCsp = persistRSAKeys;
 
             // Return the public key as an XML string
             return rsaCSP.ToXmlString(false);
@@ -78,7 +79,7 @@ namespace ChatClient
             RSACryptoServiceProvider rsaCSP = new RSACryptoServiceProvider(cspParams);
 
             // Set persistence of the container across reboots according to the class default
-            rsaCSP.PersistKeyInCsp = PersistRSAKeys;
+            rsaCSP.PersistKeyInCsp = persistRSAKeys;
 
             // Return the RSAParameters object for the CSP
             return rsaCSP.ExportParameters(true);

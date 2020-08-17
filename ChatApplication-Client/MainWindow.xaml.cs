@@ -20,31 +20,26 @@ namespace ChatClient
     public partial class MainWindow : Window
     {
         private ClientApplication clientApp;
-        
         private string currentMessage = "";
-
         private bool applicationRunning = true;
-
-        public static List<string> recipientsInGUI = new List<string>();
+        public static List<string> RecipientsInGUI = new List<string>();
 
         public MainWindow()
         {
             InitializeComponent();
-            Client.taskFactory = new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext());
+            Client.TaskFactoryGUI = new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext());
         }
-
 
         public void Send_Message(object sender, RoutedEventArgs e) 
         {
-            if(ClientShareData.getGUIRecipient() != "" && Client.initialised)
+            if(!ClientShareData.GetGUIRecipient().Equals("") && Client.Initialised)
             {
-
                 currentMessage = Send_Textbox.Text;
+
+                //Send data from textbox to Client class for processing
                 ClientShareData.AddClientMessage(currentMessage);
                 ClientShareData.SetSendButtonClicked(true);
                 AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
-
-                Console.WriteLine(Send_Textbox.Text);
             }
         }
 
@@ -55,12 +50,10 @@ namespace ChatClient
             Send_Textbox.Text = serverResponse;
         }
 
-        //append message to scrollviwer, resize viewer if needed
+        //Append message to scrollviwer, resize viewer if needed
         public void AddMessageToGUI(string username, string messageText)
         {
             Label message = new Label();
-           
-
             Style st = FindResource("StyleA") as Style;
             message.Style = st;
             message.Content = username + ": "+ messageText;
@@ -74,11 +67,6 @@ namespace ChatClient
             clientApp.Close();
         }
 
- 
-
-
-
-
         // Accepts a list of usernames and adds a clickable TextBlock in a Border to the users sidebar of the GUI for each username
         public void UpdateUsersSidebar(List<String> users)
         {
@@ -86,7 +74,7 @@ namespace ChatClient
 
             foreach (string user in users)
             {
-                recipientsInGUI.Add(user);
+                RecipientsInGUI.Add(user);
 
                 RowDefinition row = new RowDefinition();
                 row.Height = new GridLength(30);
@@ -101,7 +89,7 @@ namespace ChatClient
                 textBlock.Text = user;
                 textBlock.PreviewMouseDown += (source, e) =>
                 {
-                    ClientShareData.setGUIRecipient(textBlock.Text);
+                    ClientShareData.SetGUIRecipient(textBlock.Text);
                     Message_Area.Children.Clear();
                     string messages = Database.RetrieveUserMessages(textBlock.Text);
                     string[] messagesSplit = messages.Split('|');
@@ -118,7 +106,6 @@ namespace ChatClient
                         }
                     }
                 };
-                
 
                 border.Child = textBlock;
                 UserListGrid.Children.Add(border);
@@ -136,7 +123,7 @@ namespace ChatClient
             ClientShareData.SetUsername(UsernameTextBox.Text);
             while (applicationRunning)
             {
-                if (Client.initialised)
+                if (Client.Initialised)
                 {
                     UpdateUsersSidebar(Database.GetFriendsList());
                     break;
@@ -184,7 +171,7 @@ namespace ChatClient
             UpdateUsersSidebar(list);
         }
 
-        //Send client message when Enter key is pressed
+        //TODO Send client message when Enter key is pressed
         private void OnKeyDownHandler(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Return)
@@ -193,8 +180,6 @@ namespace ChatClient
                 ClientShareData.AddClientMessage(currentMessage);
                 ClientShareData.SetSendButtonClicked(true);
                 AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
-
-                Console.WriteLine(Send_Textbox.Text);
             }
         }
     }

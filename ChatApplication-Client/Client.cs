@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using System.Windows.Controls;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -184,7 +185,16 @@ namespace ChatClient
                             if (!message.Equals(""))
                             {
                                 Console.WriteLine("New Message: " + message);
-                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";" + ClientShareData.GetTimestamp(), chatRecipient, recipientPubKey) + "<EOT><EOF>");
+                                //Add sent messages to local database
+
+                                //get timestamp for both updating local messages DB and sending message to recipient
+                                string timestamp = ClientShareData.GetTimestamp();
+
+                                string addMessage = chatUsername + ";" + message + ";" + timestamp;
+                                Database.UpdateMessageTable(addMessage);
+
+                                //Send messages to recipient
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(chatUsername + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
                             }
                         }
 

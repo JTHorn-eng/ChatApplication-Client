@@ -6,6 +6,8 @@ using System.Text;
 using System.Windows.Controls;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
+using System.Collections.Generic;
 
 namespace ChatClient
 {
@@ -235,12 +237,26 @@ namespace ChatClient
 
                 // Signal to the GUI that we have received a new message that needs displaying to the user
                 Client.receivedMessage = content;
-                taskFactory.StartNew(() =>
+
+                if(!MainWindow.recipientsInGUI.Contains(content.Split(';')[0]))
                 {
-                    string[] splitMessage = Client.receivedMessage.Split(';');
-                    ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
-                    Client.receivedMessage = "";
-                });
+                    taskFactory.StartNew(() =>
+                    {
+                        List<string> list = new List<string>();
+                        list.Add(content.Split(';')[0]);
+                        ((MainWindow)Application.Current.MainWindow).UpdateUsersSidebar(list);
+                    });
+                }
+
+                if (content.Split(';')[0] == Client.chatRecipient)
+                {
+                    taskFactory.StartNew(() =>
+                    {
+                        string[] splitMessage = Client.receivedMessage.Split(';');
+                        ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
+                        Client.receivedMessage = "";
+                    });
+                }
 
                 // Reset the buffer so we can receive more data from it
                 state.sb = new StringBuilder();

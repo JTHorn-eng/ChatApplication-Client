@@ -25,6 +25,8 @@ namespace ChatClient
 
         private bool applicationRunning = true;
 
+        public static List<string> recipientsInGUI = new List<string>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -34,12 +36,16 @@ namespace ChatClient
 
         public void Send_Message(object sender, RoutedEventArgs e) 
         {
-            currentMessage = Send_Textbox.Text;
-            ClientShareData.AddClientMessage(currentMessage);
-            ClientShareData.SetSendButtonClicked(true);
-            AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
+            if(ClientShareData.getGUIRecipient() != "" && Client.initialised)
+            {
 
-            Console.WriteLine(Send_Textbox.Text);
+                currentMessage = Send_Textbox.Text;
+                ClientShareData.AddClientMessage(currentMessage);
+                ClientShareData.SetSendButtonClicked(true);
+                AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
+
+                Console.WriteLine(Send_Textbox.Text);
+            }
         }
 
         //TODO: Format server response messages.
@@ -76,10 +82,12 @@ namespace ChatClient
         // Accepts a list of usernames and adds a clickable TextBlock in a Border to the users sidebar of the GUI for each username
         public void UpdateUsersSidebar(List<String> users)
         {
-            int rowChildNumber = 0;
+            int rowChildNumber = UserListGrid.RowDefinitions.Count;
 
             foreach (string user in users)
             {
+                recipientsInGUI.Add(user);
+
                 RowDefinition row = new RowDefinition();
                 row.Height = new GridLength(30);
                 UserListGrid.RowDefinitions.Add(row);
@@ -88,16 +96,31 @@ namespace ChatClient
                 border.BorderThickness = new Thickness(0, 0, 0, 1);
                 border.BorderBrush = Brushes.DarkGray;
 
-                Button text = new Button();
-                text.Padding = new Thickness(5, 5, 0, 0);
-                text.Content = user;
-                text.Click += (source, e) =>
+                TextBlock textBlock = new TextBlock();
+                textBlock.Padding = new Thickness(5, 5, 0, 0);
+                textBlock.Text = user;
+                textBlock.PreviewMouseDown += (source, e) =>
                 {
-                    ClientShareData.setGUIRecipient(text.Content.ToString());
+                    ClientShareData.setGUIRecipient(textBlock.Text);
+                    Message_Area.Children.Clear();
+                    string messages = Database.RetrieveUserMessages(textBlock.Text);
+                    string[] messagesSplit = messages.Split('|');
+
+                    foreach (string message in messagesSplit)
+                    {
+
+                        if (message != "")
+                        {
+                            string[] secondSplit = message.Split(';');
+
+
+                            AddMessageToGUI(secondSplit[0], secondSplit[2]);
+                        }
+                    }
                 };
                 
 
-                border.Child = text;
+                border.Child = textBlock;
                 UserListGrid.Children.Add(border);
 
                 border.SetValue(Grid.RowProperty, rowChildNumber);
@@ -155,7 +178,10 @@ namespace ChatClient
         // On recipient button click, we set the recipient in the Client class
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            ClientShareData.setGUIRecipient(RecipientTextBox.Text);
+            //ClientShareData.setGUIRecipient(RecipientTextBox.Text);
+            List<string> list = new List<string>();
+            list.Add(RecipientTextBox.Text);
+            UpdateUsersSidebar(list);
         }
 
         //Send client message when Enter key is pressed

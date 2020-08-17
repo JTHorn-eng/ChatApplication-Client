@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -26,6 +28,7 @@ namespace ChatClient
         public MainWindow()
         {
             InitializeComponent();
+            Client.taskFactory = new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext());
         }
 
 
@@ -116,9 +119,32 @@ namespace ChatClient
                     break;
                 }
 
+                //if (Client.receivedMessage != "")
+                //{
+                //    Client.receivedMessage = "";
+                //    string[] splitMessage = Client.receivedMessage.Split(';');
+                //    AddMessageToGUI(splitMessage[0], splitMessage[1]);
+                //}
+
                 Thread.Sleep(200);
             }
+
         }
+
+        //public void NewMessageChecker(Object source, ElapsedEventArgs e)
+        //{
+        //    while (applicationRunning)
+        //    {
+        //        if (Client.receivedMessage != "")
+        //        {
+        //            string[] splitMessage = Client.receivedMessage.Split(';');
+        //            AddMessageToGUI(splitMessage[0], splitMessage[1]);
+        //            Client.receivedMessage = "";
+        //        }
+
+        //        Thread.Sleep(200);
+        //    }
+        //}
 
         // On "set DB path" button click, we set the local database path
         private void Button_Click_1(object sender, RoutedEventArgs e)

@@ -13,7 +13,7 @@ namespace ChatClient
         private static string guiRecipient = "";
         private static bool sendButtonClicked = false;
 
-
+        public static bool messageReceived = false;
       
 
 

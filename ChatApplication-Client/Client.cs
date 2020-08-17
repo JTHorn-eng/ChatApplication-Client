@@ -4,6 +4,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using System.Windows.Controls;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace ChatClient
 {
@@ -46,6 +48,10 @@ namespace ChatClient
         private static Socket client;
 
         public static bool initialised = false;
+
+        public static string receivedMessage = "";
+
+        public static TaskFactory taskFactory;
 
         private static bool recipientChanged = false;
 
@@ -227,6 +233,15 @@ namespace ChatClient
                 //Update local database table with received message
                 Database.UpdateMessageTable(content);
 
+                // Signal to the GUI that we have received a new message that needs displaying to the user
+                Client.receivedMessage = content;
+                taskFactory.StartNew(() =>
+                {
+                    string[] splitMessage = Client.receivedMessage.Split(';');
+                    ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
+                    Client.receivedMessage = "";
+                });
+
                 // Reset the buffer so we can receive more data from it
                 state.sb = new StringBuilder();
                 state.buffer = new byte[StateObject.BufferSize];
@@ -327,6 +342,20 @@ namespace ChatClient
             
             //Add messages to the local database and display in GUI
             Database.UpdateMessageTable(decryptedText);
+
+            if (encryptedText != "")
+            {
+
+                // Signal to the GUI that we have received a new message that needs displaying to the user
+                Client.receivedMessage = decryptedText;
+                taskFactory.StartNew(() =>
+                {
+                    string[] splitMessage = Client.receivedMessage.Split(';');
+                    ((MainWindow)Application.Current.MainWindow).AddMessageToGUI(splitMessage[0], splitMessage[1]);
+                    Client.receivedMessage = "";
+                });
+            }
+
             serverResponseMessages = serverResponse;
             isConnected = true;
         }

@@ -27,8 +27,6 @@ namespace ChatClient
 
     // Functions as an async socket client
     // Use with Client.Start()
-
-    //TODO Fix GUI from freezing when closing and not connected to server
     public static class Client
     {
         private static string chatRecipient = "alice_jones";
@@ -63,7 +61,7 @@ namespace ChatClient
             //Generates RSA public key for connected client
 
             //TODO: Change container name to something more secure
-            encryptionHandler = new EncryptionHandler(ClientShareData.GetUsername());
+            encryptionHandler = new EncryptionHandler(ClientShareData.username);
 
             //Constantly attempt to connect to server recursively, with timeout
             AttemptConnection();
@@ -141,7 +139,7 @@ namespace ChatClient
                 while (!dataReceived)
                 {
                     // If person has clicked send in the GUI, send the message.
-                    if (ClientShareData.GetSendButtonClicked())
+                    if (ClientShareData.sendButtonClicked)
                     {
                         // Check if the recipient has changed since we last sent a message
                         if (recipientChanged)
@@ -174,7 +172,7 @@ namespace ChatClient
                         }
 
                         //handle all messages in the queue.
-                        foreach (string message in ClientShareData.GetMessageQueue())
+                        foreach (string message in ClientShareData.MessageQueue)
                         {
 
                             if (!message.Equals(""))
@@ -185,19 +183,19 @@ namespace ChatClient
                                 //get timestamp for both updating local messages DB and sending message to recipient
                                 string timestamp = ClientShareData.GetTimestamp();
 
-                                string addMessage = ClientShareData.GetUsername() + ";" + message + ";" + timestamp;
+                                string addMessage = ClientShareData.username + ";" + message + ";" + timestamp;
                                 Database.UpdateMessageTable(chatRecipient, addMessage);
 
                                 //Send messages to recipient
-                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(ClientShareData.GetUsername() + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
+                                Send(client, "MESSAGES:<SOR>" + chatRecipient + "<EOR><SOT>" + encryptionHandler.EncryptString(ClientShareData.username + ";" + message + ";" + timestamp, chatRecipient, recipientPubKey) + "<EOT><EOF>");
                             }
                         }
 
-                        for (int x = 0; x < ClientShareData.GetMessageQueue().Count; x++)
+                        for (int x = 0; x < ClientShareData.MessageQueue.Count; x++)
                         {
                             string messageRead = ClientShareData.ReadClientMessage();
                         }
-                        ClientShareData.SetSendButtonClicked(false);
+                        ClientShareData.sendButtonClicked = false;
                     }
 
                     // Check whether we've received data from the client (but do not wait)
@@ -225,7 +223,7 @@ namespace ChatClient
 
 
                 //Update local database table with received message
-                Database.UpdateMessageTable(ClientShareData.GetUsername(), content);
+                Database.UpdateMessageTable(ClientShareData.username, content);
 
                 // Signal to the GUI that we have received a new message that needs displaying to the user
                 Client.receivedMessage = content;
@@ -309,7 +307,7 @@ namespace ChatClient
             Console.WriteLine("[INFO] Sending username to the server");
 
             // Send our chat username to the server
-            Send(client, String.Format("IDENTIFICATION:{0}<EOF>", ClientShareData.GetUsername()));
+            Send(client, String.Format("IDENTIFICATION:{0}<EOF>", ClientShareData.username));
 
             Console.WriteLine("[INFO] Receiving response from server");
 
@@ -349,7 +347,7 @@ namespace ChatClient
             }
             
             //Add messages to the local database and display in GUI
-            Database.UpdateMessageTable(ClientShareData.GetUsername(), decryptedText);
+            Database.UpdateMessageTable(ClientShareData.username, decryptedText);
 
             if (encryptedText != "")
             {

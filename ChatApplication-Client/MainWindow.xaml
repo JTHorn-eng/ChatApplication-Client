@@ -64,6 +64,8 @@
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Height="25">
                         <Grid.ColumnDefinitions>
@@ -81,11 +83,21 @@
                             <ColumnDefinition></ColumnDefinition>
                             <ColumnDefinition Width="0.5*"></ColumnDefinition>
                         </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0">Password</Label>
+                        <TextBox x:Name="PasswordTextBox" Grid.Column="1" FontFamily="ms-appx:///Assets/PassDot.ttf#PassDot" FontSize="35" VerticalAlignment="Center" Margin="5,0"/>
+                        <Button Grid.Column="2" Click="Password_Set">Set</Button>
+                    </Grid>
+                    <Grid Grid.Row="2" Height="25">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
                         <Label Grid.Column="0">DB Path</Label>
                         <TextBox x:Name="DBPathTextBox" Grid.Column="1" Text="C:\ChatAppClient\messages.db" VerticalAlignment="Center" Margin="5,0"/>
                         <Button Grid.Column="2" Click="Button_Click_1">Set</Button>
                     </Grid>
-                    <Grid Grid.Row="2" Height="25">
+                    <Grid Grid.Row="3" Height="25">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="0.5*"></ColumnDefinition>
                             <ColumnDefinition></ColumnDefinition>

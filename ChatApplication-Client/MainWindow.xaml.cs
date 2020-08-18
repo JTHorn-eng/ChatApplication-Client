@@ -17,8 +17,14 @@ namespace ChatClient
     /// </summary>
     /// 
 
+
+
     public partial class MainWindow : Window
     {
+
+
+
+
         private ClientApplication clientApp;
         private string currentMessage = "";
         private bool applicationRunning = true;
@@ -38,8 +44,8 @@ namespace ChatClient
 
                 //Send data from textbox to Client class for processing
                 ClientShareData.AddClientMessage(currentMessage);
-                ClientShareData.SetSendButtonClicked(true);
-                AddMessageToGUI(ClientShareData.GetUsername(), currentMessage);
+                ClientShareData.sendButtonClicked = true;
+                AddMessageToGUI(ClientShareData.username, currentMessage);
             }
         }
 
@@ -116,29 +122,30 @@ namespace ChatClient
             }
         }
 
+        //Set the password for the client
+        private void Password_Set(object sender, RoutedEventArgs e)
+        {
+             
+        }
+
         // On "set username" button click, we set the username and start the application
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             clientApp = new ClientApplication();
             ClientShareData.SetUsername(UsernameTextBox.Text);
-            while (applicationRunning)
-            {
-                if (Client.Initialised)
+            if (Client.Initialised) { 
+                while (applicationRunning)
                 {
                     UpdateUsersSidebar(Database.GetFriendsList());
                     break;
+                    //if (Client.receivedMessage != "")
+                    //{
+                    //    Client.receivedMessage = "";
+                    //    string[] splitMessage = Client.receivedMessage.Split(';');
+                    //    AddMessageToGUI(splitMessage[0], splitMessage[1]);
+                    //}
                 }
-
-                //if (Client.receivedMessage != "")
-                //{
-                //    Client.receivedMessage = "";
-                //    string[] splitMessage = Client.receivedMessage.Split(';');
-                //    AddMessageToGUI(splitMessage[0], splitMessage[1]);
-                //}
-
-                Thread.Sleep(200);
             }
-
         }
 
         //public void NewMessageChecker(Object source, ElapsedEventArgs e)

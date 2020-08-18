@@ -61,7 +61,7 @@ namespace ChatClient
             // Set up the reader we can use to pull sender names attached to message records in turn
             SQLiteDataReader reader = selectQuery.ExecuteReader();
 
-            string thisUser = ClientShareData.GetUsername();
+            string thisUser = ClientShareData.username;
 
             if (reader.HasRows)
             {
